@@ -18,6 +18,10 @@ Every environment, dataset, model spec, and expected number is pinned
 each demo verifies its own results against the pinned reference (±0.005) and
 prints an ASCII chart in the terminal (PNG charts land in `results/`).
 
+```bash
+git clone https://github.com/pb1069/apnoms2026-beyond-accuracy.git
+```
+
 ## Run it — Path A: with an LLM agent (recommended)
 
 Open your agent (Claude Code, Codex, …) at this repo root and paste the prompts

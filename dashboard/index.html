@@ -32,7 +32,7 @@
 <body>
 <h1>Beyond <span>Accuracy</span> — Live Results</h1>
 <div class="sub">APNOMS 2026 Tutorial 1 · Assessing the Reliability of AI Outputs in Security Operations
-· auto-refreshes every 5s</div>
+· auto-refreshes every 5s<span id="mode" style="color:var(--warn)"></span></div>
 
 <div class="grid">
   <div class="card" id="demo1">
@@ -58,9 +58,14 @@
 const f = (x, d=4) => typeof x === "number" ? x.toFixed(d) : x;
 const pct = x => (100 * x).toFixed(1) + "%";
 
+let pinnedUsed = false;
 async function grab(name) {
-  try { const r = await fetch(`../results/${name}.json`); return r.ok ? r.json() : null; }
-  catch { return null; }
+  // live results first; fall back to the pinned reference shipped in the repo
+  // (this is what makes the page work as a public audit view, e.g. GitHub Pages)
+  try { const r = await fetch(`../results/${name}.json`); if (r.ok) return r.json(); } catch {}
+  try { const r = await fetch(`../expected_outputs/${name}.json`);
+        if (r.ok) { pinnedUsed = true; return r.json(); } } catch {}
+  return null;
 }
 
 function rows(pairs) {
@@ -79,7 +84,7 @@ async function render() {
             ["agreement — wrong", `<span class="down">${f(d1.agree_wrong_mean)} ▼</span>`]])}
     <div class="verdict warn">The model is <b>more confident when it is wrong</b>
       (${d1.conf_separation > 0 ? "+" : ""}${f(d1.conf_separation)}). Agreement separates correctly.</div>
-    <img src="../results/demo1_confidence.png" alt="">`;
+    <img onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=this.src.replace('/results/','/expected_outputs/charts/')}" src="../results/demo1_confidence.png" alt="">`;
 
   const d2 = await grab("demo2");
   if (d2) document.getElementById("demo2").innerHTML = `
@@ -90,7 +95,7 @@ async function render() {
             ["agreement — coverage / TP", `<b>${pct(d2.agreement_coverage)} / ${d2.agreement_tp}</b>`]])}
     <div class="verdict">At precision 1.0, agreement detects
       <b>${f(d2.tp_ratio_agreement_over_confidence, 1)}× more attacks</b> than confidence.</div>
-    <img src="../results/demo2_selective.png" alt="">`;
+    <img onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=this.src.replace('/results/','/expected_outputs/charts/')}" src="../results/demo2_selective.png" alt="">`;
 
   const d3 = await grab("demo3_cic");
   if (d3) document.getElementById("demo3").innerHTML = `
@@ -103,7 +108,9 @@ async function render() {
             ["accept rate @ thr", `<span class="down">${pct(d3.holdout_accept_rate)} → ${pct(d3.friday_accept_rate)} ▼ moves</span>`]])}
     <div class="verdict warn"><b>${d3.friday_wrong_conf90} wrong Friday verdicts carry confidence ≥ 0.9.</b>
       Per-sample means stay silent through the collapse — the label-free <b>rate signals</b> are what move.</div>
-    <img src="../results/demo3_cic_drift.png" alt="">`;
+    <img onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=this.src.replace('/results/','/expected_outputs/charts/')}" src="../results/demo3_cic_drift.png" alt="">`;
+  const m = document.getElementById("mode");
+  if (m) m.textContent = pinnedUsed ? " · 📌 pinned reference (audit view)" : "";
 }
 render();
 setInterval(render, 5000);

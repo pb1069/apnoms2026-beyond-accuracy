@@ -1,4 +1,4 @@
-# Prompt 03 — Demo 3: Real-world drift on CIC-IDS2017 `[v1 — 1차 리허설 반영(자기완결성); freeze 전 반복 실측 필요]`
+# Prompt 03 — Demo 3: Real-world drift on CIC-IDS2017 `[FROZEN v1.0 — Claude 3연속 통과 (2026-08-31). Codex 교차 검증은 발표 노트북에서]`
 
 Requires the CIC track (`python scripts/run_pipeline.py --track cic` — downloads
 844 MB from Kaggle once and trains ~5 min; the presenter machine has it ready).

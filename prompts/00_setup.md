@@ -1,4 +1,4 @@
-# Prompt 00 — Environment setup & artifact verification `[v1 — 1차 리허설 반영(SSL 분기); freeze 전 반복 실측 필요]`
+# Prompt 00 — Environment setup & artifact verification `[FROZEN v1.0 — Claude 3연속 통과 (2026-08-31). Codex 교차 검증은 발표 노트북에서]`
 
 Paste into your agent at the repo root:
 

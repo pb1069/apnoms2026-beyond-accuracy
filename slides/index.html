@@ -99,7 +99,7 @@
     <tr><td>Correct predictions</td><td class="num">0.9457</td></tr>
     <tr><td class="bad">Wrong predictions</td><td class="num bad">0.9635 ▲</td></tr>
   </table>
-  <div class="panel">A network intrusion detector, 69% accurate on drifted traffic —
+  <div class="panel">A network intrusion detector, 69% accurate against evasive traffic —
     and its <b>most confident answers are its mistakes</b>.</div>
   <div class="sub">Would you auto-block traffic based on this model's confidence?<br>
     In ~25 minutes we will reproduce this number live, in this room.</div>
@@ -835,16 +835,21 @@ document.querySelectorAll(".prompt .copy").forEach(btn => {
 
 // ---- live bindings: results/*.json + models/meta.json ------------------
 const cache = {};
+async function fetchWithFallback(paths) {
+  // live results first; pinned reference (shipped in repo) second —
+  // makes the deck work as a public audit view (e.g. GitHub Pages)
+  for (const p of paths) {
+    try { const r = await fetch(p); if (r.ok) return r.json(); } catch {}
+  }
+  return null;
+}
 async function poll() {
   for (const name of ["demo1", "demo2", "demo3", "demo3_cic"]) {
-    try { const r = await fetch(`../results/${name}.json`); if (r.ok) cache[name] = await r.json(); }
-    catch {}
+    const d = await fetchWithFallback([`../results/${name}.json`, `../expected_outputs/${name}.json`]);
+    if (d) cache[name] = d;
   }
-  try {
-    const r = await fetch("../models/meta.json");
-    if (r.ok) { const m = await r.json();
-      m.dataset_sha8 = (m.dataset_sha256 || "").slice(0, 8); cache.meta = m; }
-  } catch {}
+  const m = await fetchWithFallback(["../models/meta.json", "../expected_outputs/meta.json"]);
+  if (m) { m.dataset_sha8 = (m.dataset_sha256 || "").slice(0, 8); cache.meta = m; }
   document.querySelectorAll("[data-live]").forEach(el => {
     const [src, key] = el.dataset.live.split(":");
     const v = cache[src]?.[key];
@@ -857,6 +862,11 @@ async function poll() {
     if (img.dataset.loaded === "1") return;
     const probe = new Image();
     probe.onload = () => { img.src = probe.src; img.dataset.loaded = "1"; img.style.display = ""; };
+    probe.onerror = () => {                    // pinned reference chart fallback
+      const fb = new Image();
+      fb.onload = () => { img.src = fb.src; img.dataset.loaded = "1"; img.style.display = ""; };
+      fb.src = img.dataset.liveimg.replace("/results/", "/expected_outputs/charts/");
+    };
     probe.src = img.dataset.liveimg + "?t=" + Date.now();
     if (!img.dataset.loaded) img.style.display = "none";
   });

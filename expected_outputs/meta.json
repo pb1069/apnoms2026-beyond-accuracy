@@ -1,0 +1,7 @@
+{
+  "python": "3.13.14",
+  "numpy": "2.3.4",
+  "sklearn": "1.7.2",
+  "dataset_sha256": "aa1a7e4796a68623862a8b8863f56372200c8f98bc9215975222ba8f449828bf",
+  "elapsed_sec": 23.4
+}

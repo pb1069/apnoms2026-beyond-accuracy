@@ -1,4 +1,4 @@
-# Prompt 01 — Demo 1: Is confidence trustworthy? `[v1 — 1차 리허설 반영(자기완결성); freeze 전 반복 실측 필요]`
+# Prompt 01 — Demo 1: Is confidence trustworthy? `[FROZEN v1.0 — Claude 3연속 통과 (2026-08-31). Codex 교차 검증은 발표 노트북에서]`
 
 ```
 Run Demo 1 (experiments/demo1_confidence.py) in the tutorial environment:

@@ -92,4 +92,6 @@ No GPU, no external downloads, no network needed after `docker compose build`.
 The tutorial slides live at **http://localhost:8000/slides/** (same server as the
 dashboard). Checkpoint slides fetch `results/*.json` every 5 s, so demo numbers
 and charts appear in the deck the moment a demo finishes. Keys: ←/→ navigate,
-**N** speaker notes, **D** open the dashboard, browser print → PDF backup.
+**N** speaker notes, **D** open the dashboard, **T** live terminal overlay
+(screen-shares a window of your choice — e.g. your Claude Code terminal — into
+the deck; Shift+T for large mode), browser print → PDF backup.

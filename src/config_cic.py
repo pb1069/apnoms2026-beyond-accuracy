@@ -4,7 +4,8 @@ Same rule applies: every constant is part of the pinned artifact.
 """
 
 # ---- source ----------------------------------------------------------
-KAGGLE_DATASET = "chethuhn/network-intrusion-dataset"  # CIC-IDS2017 MachineLearningCSV mirror (anonymous download OK)
+# CIC-IDS2017 MachineLearningCSV mirror (anonymous download OK) — version PINNED
+KAGGLE_DATASET = "chethuhn/network-intrusion-dataset/versions/1"
 
 # day tags derived from file names (lowercased substring match)
 DAY_OF_FILE = {

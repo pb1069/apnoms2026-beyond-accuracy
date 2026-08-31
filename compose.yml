@@ -1,0 +1,20 @@
+services:
+  lab:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PIP_EXTRA_OPTS: ${PIP_EXTRA_OPTS:-}
+    image: apnoms2026-beyond-accuracy:latest
+    volumes:
+      - .:/work
+    working_dir: /work
+
+  dashboard:
+    image: apnoms2026-beyond-accuracy:latest
+    volumes:
+      - .:/work
+    working_dir: /work
+    command: python scripts/serve.py
+    ports:
+      - "8000:8000"

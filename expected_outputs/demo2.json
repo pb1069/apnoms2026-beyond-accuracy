@@ -1,0 +1,13 @@
+{
+  "n_test": 4000,
+  "n_attack": 1959,
+  "confidence_threshold": 0.9884,
+  "confidence_coverage": 0.019,
+  "confidence_tp": 76,
+  "confidence_recall": 0.0388,
+  "agreement_threshold": 0.775,
+  "agreement_coverage": 0.3217,
+  "agreement_tp": 1287,
+  "agreement_recall": 0.657,
+  "tp_ratio_agreement_over_confidence": 16.93
+}

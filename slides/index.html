@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Beyond Accuracy — APNOMS 2026 Tutorial 1</title>
+<style>
+  :root { --bg:#0f1420; --card:#1a2233; --ink:#e8edf6; --dim:#8fa0bb;
+          --ok:#3ecf8e; --bad:#ff6b6b; --accent:#5b9dff; --warn:#ffb454; }
+  * { box-sizing:border-box; margin:0; }
+  html, body { height:100%; overflow:hidden; background:var(--bg); }
+  body { font:22px/1.5 "Segoe UI", system-ui, sans-serif; color:var(--ink); }
+
+  #stage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .slide { width:1280px; height:720px; padding:70px 90px; display:none; flex-direction:column;
+           position:relative; background:var(--bg); }
+  .slide.active { display:flex; }
+
+  .tag { position:absolute; top:28px; left:90px; font-size:14px; letter-spacing:2px;
+         text-transform:uppercase; color:var(--dim); }
+  .tag b { color:var(--accent); font-weight:600; }
+  h1 { font-size:54px; line-height:1.15; font-weight:650; }
+  h1 span, h2 span { color:var(--accent); }
+  h2 { font-size:40px; font-weight:650; margin-bottom:26px; }
+  .sub { color:var(--dim); font-size:24px; margin-top:18px; }
+  ul { margin:8px 0 0 26px; }
+  li { margin:10px 0; }
+  li::marker { color:var(--accent); }
+  .dim { color:var(--dim); }
+  .big { font-size:30px; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); } .warn { color:var(--warn); }
+
+  table { border-collapse:collapse; font-size:21px; margin:16px 0; }
+  th, td { padding:9px 20px; border-bottom:1px solid #2a3450; text-align:left; }
+  th { color:var(--dim); font-weight:600; font-size:17px; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+
+  .panel { background:var(--card); border-radius:14px; padding:24px 30px; margin-top:22px; }
+  .verdict { border-left:4px solid var(--ok); background:#0d2b21; padding:14px 20px;
+             border-radius:8px; margin-top:20px; font-size:22px; }
+  .verdict.red { border-left-color:var(--bad); background:#2f1520; }
+
+  .prompt { position:relative; background:#0b101c; border:1px solid #2a3450; border-radius:10px;
+            padding:20px 24px; margin-top:20px; font:17px/1.55 Consolas, monospace;
+            white-space:pre-wrap; color:#c9d6ee; }
+  .prompt .copy { position:absolute; top:10px; right:10px; font:14px "Segoe UI",sans-serif;
+            background:var(--accent); color:#08101f; border:0; border-radius:6px;
+            padding:5px 12px; cursor:pointer; }
+  .kick { display:inline-block; align-self:flex-start; background:var(--accent); color:#08101f;
+          font-weight:700; font-size:15px; letter-spacing:1px; border-radius:999px;
+          padding:4px 14px; margin-bottom:8px; }
+  .live-badge { display:inline-block; align-self:flex-start; background:#301a1f; color:var(--bad);
+          font-weight:700; font-size:15px; letter-spacing:1px; border-radius:999px;
+          padding:4px 14px; margin-bottom:8px; }
+  [data-live] { color:var(--warn); font-weight:600; }
+  [data-live].filled { color:var(--ink); }
+  img.chart { max-height:300px; border-radius:10px; background:#fff; margin-top:14px; align-self:flex-start; }
+
+  .cols { display:flex; gap:40px; margin-top:10px; }
+  .cols > div { flex:1; }
+
+  #hud { position:fixed; bottom:14px; right:22px; color:var(--dim); font-size:15px; z-index:5; }
+  #bar { position:fixed; bottom:0; left:0; height:4px; background:var(--accent); width:0; z-index:5; }
+  #notes { position:fixed; left:0; right:0; bottom:0; background:#000c; color:#ffe9a8;
+           font-size:16px; padding:12px 24px; display:none; z-index:6; white-space:pre-wrap; }
+  .note { display:none; }
+
+  @media print {
+    html, body { overflow:visible; background:#fff; }
+    #stage { position:static; display:block; }
+    .slide { display:flex !important; page-break-after:always; transform:none !important; }
+    #hud, #bar, #notes { display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 1 ================================================================ -->
+<section class="slide">
+  <div class="tag">APNOMS 2026 · Tutorial 1 · Sep 9, 09:00–10:20 · Civic Hall A</div>
+  <div style="margin:auto 0;">
+    <h1>Beyond <span>Accuracy</span></h1>
+    <h1 style="font-size:38px; font-weight:500; margin-top:14px;">
+      Assessing the Reliability of AI Outputs in Security Operations</h1>
+    <div class="sub" style="margin-top:48px;">
+      <b>Ui-Jun Baek, Ph.D.</b> · Senior Researcher<br>
+      Science and Technology Security Research Center, KISTI
+    </div>
+  </div>
+  <div class="note">인사 + 소속 소개. 노트북 화면: 이 슬라이드 + 터미널 준비 상태 확인.</div>
+</section>
+
+<!-- 2 ================================================================ -->
+<section class="slide">
+  <div class="tag"><b>Hook</b></div>
+  <h2>This model is <span class="bad" style="color:var(--bad)">more confident</span> when it is wrong</h2>
+  <table class="big">
+    <tr><th>Prediction group</th><th class="num">Mean confidence</th></tr>
+    <tr><td>Correct predictions</td><td class="num">0.9457</td></tr>
+    <tr><td class="bad">Wrong predictions</td><td class="num bad">0.9635 ▲</td></tr>
+  </table>
+  <div class="panel">A network intrusion detector, 69% accurate on drifted traffic —
+    and its <b>most confident answers are its mistakes</b>.</div>
+  <div class="sub">Would you auto-block traffic based on this model's confidence?<br>
+    In ~25 minutes we will reproduce this number live, in this room.</div>
+  <div class="note">청중에게 질문 던지기: "confidence 0.96이면 믿으시겠습니까?" 2~3초 침묵. 이 수치는 오늘 라이브로 재현됨을 예고.</div>
+</section>
+
+<!-- 3 ================================================================ -->
+<section class="slide">
+  <div class="tag"><b>Roadmap</b></div>
+  <h2>How this tutorial runs</h2>
+  <ul class="big">
+    <li><b>Concepts</b> — why accuracy-centered evaluation fails in operations</li>
+    <li><b>Live demos in two labs</b> — a controlled synthetic lab (mechanism),
+        then <b>CIC-IDS2017</b> (reality)</li>
+    <li><b>Operational guidance</b> — accept / review / withhold</li>
+  </ul>
+  <div class="panel">
+    <b>Two ways to run everything yourself:</b><br>
+    Path A — paste our prompts into an LLM agent (Claude Code, Codex, …)<br>
+    Path B — manual commands (Docker, or plain Python venv)
+  </div>
+  <div class="sub">We pipeline: each demo is <b>kicked off before</b> the concept it proves —
+    results arrive just as we finish learning why they matter.</div>
+  <div class="note">이중 트랙 + 파이프라인 방식 설명. "제가 에이전트에게 일을 시켜두고, 그동안 개념을 설명합니다."</div>
+</section>
+
+<!-- 4 ================================================================ -->
+<section class="slide">
+  <div class="tag"><b>Kickoff ①</b> · 09:03</div>
+  <span class="kick">AGENT KICKOFF</span>
+  <h2>Setup — an agent builds the lab while we talk</h2>
+  <div class="prompt" id="p00">Set up this tutorial environment and prove it works.
+
+1. If Docker is available: `docker compose build`, then verify the shipped
+   artifacts (pinned data + pre-trained models) inside the container:
+     docker compose run --rm lab python scripts/smoke_test.py
+   On an SSL build error (corporate proxy), retry once with
+   PIP_EXTRA_OPTS="--trusted-host pypi.org --trusted-host files.pythonhosted.org".
+   Only if Docker is truly unavailable, fall back to a native venv:
+   `pip install -r requirements.txt`, then run the same script directly.
+   Only if models are reported missing: rebuild with `python src/train.py`.
+2. Then start the results dashboard and confirm
+   http://localhost:8000/dashboard/ responds.
+3. Report: which environment path you used, the smoke test PASS/FAIL lines,
+   and whether the CIC-IDS2017 track was present. Do not edit any source file.<button class="copy">copy</button></div>
+  <div class="sub">Repo: <b>github.com/&lt;repo-url-TBD&gt;</b> · prompts/00_setup.md</div>
+  <div class="note">터미널 전환 → 프롬프트 붙여넣기 → 엔터 → 슬라이드 복귀 (30초 의식). "환경은 지금부터 에이전트가 만듭니다."</div>
+</section>
+
+<!-- 5 ================================================================ -->
+<section class="slide">
+  <div class="tag"><b>Part 1</b> · The traps</div>
+  <h2>Detection accuracy is a solved-looking problem</h2>
+  <table>
+    <tr><th>Task (public IDS benchmarks)</th><th class="num">Typical accuracy</th></tr>
+    <tr><td>Binary detection (benign vs attack)</td><td class="num">0.99+</td></tr>
+    <tr><td>Multi-class attack classification</td><td class="num">0.77 – 0.97</td></tr>
+  </table>
+  <div class="verdict red">The question in operations is no longer
+    <i>"can the model detect?"</i> — it is <b><i>"can the analyst act on this output?"</i></b></div>
+  <ul class="dim" style="margin-top:18px;">
+    <li>Every alert triggers work: triage, investigation, potential blocking</li>
+    <li>Acting on a wrong-but-confident output costs more than a miss</li>
+  </ul>
+  <div class="note">숫자 자체는 기존 벤치마크 일반론. "정확도는 이미 높다, 문제는 신뢰다"로 프레임 전환.</div>
+</section>
+
+<!-- 6 ================================================================ -->
+<section class="slide">
+  <div class="tag"><b>Part 1</b> · Trap 1/3</div>
+  <h2>Overconfidence — wrong ≠ uncertain</h2>
+  <ul class="big">
+    <li>Softmax probability is <b>not</b> P(correct) — it is a trained artifact</li>
+    <li>Cleanly separable training data ⇒ cross-entropy drives outputs to 0.99+</li>
+    <li>Calibration breaks <b>silently</b>: no error message, no exception</li>
+  </ul>
+  <div class="panel">A model can be 99% "confident" on inputs unlike anything it was trained on.
+    Confidence measures <b>distance from a learned boundary</b>, not truth.</div>
+  <div class="note">"모델은 자기가 모른다는 걸 모른다." ECE 언급은 다음 개념 파트에서.</div>
+</section>
+
+<!-- 7 ================================================================ -->
+<section class="slide">
+  <div class="tag"><b>Part 1</b> · Trap 2/3</div>
+  <h2>Shortcut learning — the fingerprint trap</h2>
+  <ul class="big">
+    <li>Models latch onto the <b>easiest separating feature</b>, not the true cause</li>
+    <li>In traffic data: TLS fingerprints, port patterns, capture-time artifacts</li>
+    <li>The shortcut holds in the dataset — and <b>inverts</b> in the wild (evasion, benign look-alikes)</li>
+  </ul>
+  <div class="panel">Our lab dataset has a shortcut <b>planted by design</b> —
+    so today you will see exactly what happens when reality breaks it.
+    <span class="dim">(And that is why we can explain every number you'll see.)</span></div>
+  <div class="note">합성 데이터임을 당당하게 공개 — 메커니즘을 설계했으므로 "왜"까지 설명 가능하다는 게 오히려 강점.</div>
+</section>
+
+<!-- 8 ================================================================ -->
+<section class="slide">
+  <div class="tag"><b>Part 1</b> · Trap 3/3</div>
+  <h2>Distribution shift — and the label problem</h2>
+  <ul class="big">
+    <li>Traffic drifts: new apps, new libraries, new attack tooling</li>
+    <li>Accuracy in production is <b>invisible</b> — nobody labels live traffic</li>
+    <li>So the one metric you optimized is the one metric you cannot watch</li>
+  </ul>
+  <div class="verdict red"><b>Accuracy ≠ Reliability.</b>
+    Operations need signals that are computable <i>without labels</i> —
+    and that fail <i>loudly</i> when the model fails.</div>
+  <div class="note">Part 1 요약. "라벨 없이 계산 가능하고, 모델이 망가질 때 시끄럽게 망가지는 신호" = 오늘의 주제.</div>
+</section>
+
+<!-- 9 ================================================================ -->
+<section class="slide">
+  <div class="tag"><b>Checkpoint ①</b> · 09:15</div>
+  <span class="live-badge">LIVE</span>
+  <h2>Is the lab ready?</h2>
+  <table class="big">
+    <tr><th>Setup report</th><th class="num">Value</th></tr>
+    <tr><td>Python (container)</td><td class="num" data-live="meta:python">—</td></tr>
+    <tr><td>numpy / scikit-learn</td><td class="num"><span data-live="meta:numpy">—</span> / <span data-live="meta:sklearn">—</span></td></tr>
+    <tr><td>Setup wall-clock</td><td class="num"><span data-live="meta:elapsed_sec">—</span> s</td></tr>
+    <tr><td>Dataset content hash</td><td class="num" data-live="meta:dataset_sha8">—</td></tr>
+  </table>
+  <div class="sub">Environment, dataset, and every model spec are <b>pinned</b> —
+    the numbers you are about to see are the numbers you will get at home.</div>
+  <div class="note">에이전트 보고 확인 + 이 표가 자동으로 채워졌는지 확인. 안 채워졌으면 폴백: 터미널 출력 보여주기. 버퍼 여유 있으면 대시보드 빈 화면도 잠깐.</div>
+</section>
+
+<!-- 9b: the lab 1/2 ================================================= -->
+<section class="slide">
+  <div class="tag"><b>Lab 1</b> · synthetic · 1/2</div>
+  <h2>Meet the dataset <span class="dim">(you take it home)</span></h2>
+  <table class="big">
+    <tr><th>Ingredient</th><th>Design</th></tr>
+    <tr><td>Traffic flows</td><td>6,000 train / 4,000 test · 30 features · 3 modality groups</td></tr>
+    <tr><td>True evidence</td><td>6 attack-indicator channels (benign ≈ 0, attacks shift up)</td></tr>
+    <tr><td class="warn">Planted shortcut</td><td>1 feature, near-perfectly correlated with the label — in training</td></tr>
+    <tr><td class="bad">Evasive samples</td><td>30% of test: shortcut inverted &amp; exaggerated, true indicators suppressed</td></tr>
+  </table>
+  <div class="sub">Synthetic on purpose: we control the failure mechanism —
+    so every number that follows can be <b>explained</b>, not just observed.</div>
+  <div class="note">데이터 설계 공개. "회피 샘플 = 겉은 요란하게 위장, 진짜 지표는 숨김" 서사 강조.</div>
+</section>
+
+<!-- 9c: the lab 2/2 -->
+<section class="slide">
+  <div class="tag"><b>Lab 1</b> · synthetic · 2/2</div>
+  <h2>Two detectors, one dataset</h2>
+  <div class="cols">
+    <div class="panel"><b>Baseline</b><br><span class="dim">One MLP, sees all 30 features.
+      Heavily regularized, so its confidence genuinely tracks signal strength —
+      a <i>best-case</i> single model.</span></div>
+    <div class="panel"><b>Ensemble</b><br><span class="dim">40 small experts, 12 features each.
+      Diversity constraint: only 10 experts are allowed to see the shortcut.</span></div>
+  </div>
+  <ul class="big" style="margin-top:24px;">
+    <li>Every seed, split and hyperparameter pinned in <b>src/config.py</b></li>
+    <li>Docker and native runs reproduce to 4 decimal places</li>
+  </ul>
+  <div class="note">"다양성 제약 = 한 shortcut이 판정을 독점 못 하게." 검증 인지형 IDS 아이디어의 미니어처.</div>
+</section>
+
+<!-- 10 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 1/4</div>
+  <h2>Confidence &amp; calibration</h2>
+  <ul class="big">
+    <li><b>Calibrated</b>: among outputs with confidence 0.9, ~90% are correct</li>
+    <li>Measured by ECE / reliability diagrams — <i>on labeled data</i></li>
+    <li>Deep nets are systematically <b>miscalibrated toward overconfidence</b></li>
+  </ul>
+  <div class="panel">Even a perfectly calibrated model only tells you the <i>average</i> risk —
+    it cannot flag <b>which</b> prediction is the wrong one.</div>
+  <div class="note">수식 없이 개념만. reliability diagram은 말로 설명 ("x축 confidence, y축 실제 정답률, 대각선이 이상적").</div>
+</section>
+
+<!-- 10b: reliability diagram ======================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 1/4</div>
+  <h2>What miscalibration looks like</h2>
+  <div class="cols" style="align-items:center;">
+    <div>
+      <svg viewBox="0 0 360 300" width="460">
+        <line x1="50" y1="250" x2="330" y2="250" stroke="#8fa0bb"/>
+        <line x1="50" y1="250" x2="50" y2="20" stroke="#8fa0bb"/>
+        <line x1="50" y1="250" x2="330" y2="30" stroke="#3ecf8e" stroke-dasharray="6 4" stroke-width="2"/>
+        <path d="M 50 250 C 150 246, 250 215, 330 130" stroke="#ff6b6b" stroke-width="3.5" fill="none"/>
+        <text x="120" y="283" fill="#8fa0bb" font-size="16">stated confidence →</text>
+        <text x="30" y="180" fill="#8fa0bb" font-size="16" transform="rotate(-90 30 180)">actual accuracy →</text>
+        <text x="205" y="60" fill="#3ecf8e" font-size="16">calibrated</text>
+        <text x="225" y="190" fill="#ff6b6b" font-size="16">overconfident</text>
+      </svg>
+    </div>
+    <div>
+      <ul class="big">
+        <li>The red gap is <b>invisible at run time</b></li>
+        <li>It is widest exactly where you trust most: the high-confidence zone</li>
+        <li>Demo 1 puts real numbers on this curve</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note">그림 하나로 ECE 직관 전달. "빨간 간극은 런타임에 안 보인다."</div>
+</section>
+
+<!-- 11 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 1/4 → <b>Kickoff ②</b></div>
+  <h2>So… is confidence an error signal at all?</h2>
+  <div class="sub">Hypothesis for Demo 1: on traffic with evasive samples,
+    mean confidence of <b>wrong</b> predictions ≥ mean confidence of correct ones.</div>
+  <span class="kick" style="margin-top:26px;">AGENT KICKOFF</span>
+  <div class="prompt">Run Demo 1 (experiments/demo1_confidence.py) in the tutorial environment:
+Docker preferred (image apnoms2026-beyond-accuracy, already built by setup;
+`docker compose run --rm lab ...`), venv fallback otherwise. The script verifies its own numbers against
+expected_outputs/demo1.json at ±0.005.
+
+Then answer, in two sentences, based only on the output:
+which group of predictions — correct or wrong — has the HIGHER mean confidence,
+and which signal (confidence vs ensemble agreement) actually separates errors?
+Include the verification verdict.<button class="copy">copy</button></div>
+  <div class="note">킥오프 ② 의식. "결과는 6분 뒤에 확인합니다. 그동안 uncertainty 이야기."</div>
+</section>
+
+<!-- 12 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 2/4</div>
+  <h2>Uncertainty — what kind of "don't know"?</h2>
+  <div class="cols">
+    <div class="panel"><b>Aleatoric</b><br><span class="dim">Noise in the world.
+      Two flows, identical features, different labels. Irreducible.</span></div>
+    <div class="panel"><b>Epistemic</b><br><span class="dim">Model ignorance.
+      Inputs unlike training data. Reducible — if you can detect it.</span></div>
+  </div>
+  <ul class="big" style="margin-top:24px;">
+    <li>Drift and evasion live in the <b>epistemic</b> box</li>
+    <li>A single model's softmax <b>cannot see</b> its own ignorance</li>
+  </ul>
+  <div class="note">"모델 하나는 자신의 무지를 못 본다" → 다음 슬라이드에서 앙상블로 연결.</div>
+</section>
+
+<!-- 13 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 2/4</div>
+  <h2>A practical proxy: ensemble agreement</h2>
+  <ul class="big">
+    <li>Train <b>K experts on different evidence</b> (feature subsets, modalities)</li>
+    <li><b>Agreement</b> = fraction of experts backing the majority decision</li>
+    <li>Familiar inputs → experts converge · unfamiliar inputs → experts scatter</li>
+  </ul>
+  <div class="panel">Case in point: verification-aware IDS designs (e.g. VALIDS) emit
+    agreement, evidence-flip and diversity telemetry <b>as first-class outputs</b> —
+    signals you can compute without a single label.</div>
+  <div class="sub">Our lab: 40 small experts, only 10 of which may see the shortcut feature.</div>
+  <div class="note">VALIDS는 사례 1장으로만. 우리 랩 구성(40 expert, shortcut 노출 10개 제한 = 다양성 제약) 설명.</div>
+</section>
+
+<!-- 13b: signal menu ================================================= -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · reference</div>
+  <h2>The label-free signal menu</h2>
+  <table>
+    <tr><th>Signal</th><th>Computed from</th><th>Extra cost</th><th>Catches</th></tr>
+    <tr><td>Confidence</td><td>single model output</td><td>free</td><td class="dim">little, alone — can lie</td></tr>
+    <tr><td>Agreement</td><td>K expert votes</td><td>K× inference (tiny models)</td><td>novel inputs, evasion</td></tr>
+    <tr><td>Margin / entropy</td><td>output distribution</td><td>free</td><td>boundary proximity</td></tr>
+    <tr><td>Evidence flip</td><td>masked re-inference</td><td>+1 pass</td><td>shortcut reliance</td></tr>
+    <tr><td>Signal trends</td><td>any of the above, over time</td><td>storage</td><td>drift onset</td></tr>
+  </table>
+  <div class="sub">Today's demos use confidence and agreement — but the menu is bigger.
+    Combine; never rely on one.</div>
+  <div class="note">레퍼런스 슬라이드 — 사진 찍는 청중 많을 장. 잠시 머물기.</div>
+</section>
+
+<!-- 13c: bet buffer -->
+<section class="slide">
+  <div class="tag"><b>buffer</b> · place your bet</div>
+  <h2>Before the result lands…</h2>
+  <div class="panel big" style="margin-top:30px;">On our evasive test set,
+    whose <b>mean confidence</b> is higher?<br><br>
+    &nbsp;&nbsp;<b>A.</b> Correct predictions&nbsp;&nbsp;&nbsp;&nbsp;
+    <b>B.</b> Wrong predictions&nbsp;&nbsp;&nbsp;&nbsp;
+    <b>C.</b> About equal</div>
+  <div class="sub">Hands up for A… B… C.
+    <span class="dim">(No labels were harmed in this poll.)</span></div>
+  <div class="note">[버퍼] 손들기 투표 — 체크포인트 ②가 아직이면 여기서 1~2분, 끝났으면 10초 컷.</div>
+</section>
+
+<!-- 14 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Checkpoint ②</b> · 09:28 · Demo 1</div>
+  <span class="live-badge">LIVE</span>
+  <h2>Demo 1 — confidence vs agreement</h2>
+  <div class="cols">
+    <div>
+      <table>
+        <tr><th>Signal</th><th class="num">correct</th><th class="num">wrong</th></tr>
+        <tr><td>Confidence</td>
+            <td class="num" data-live="demo1:conf_correct_mean">—</td>
+            <td class="num" data-live="demo1:conf_wrong_mean">—</td></tr>
+        <tr><td>Agreement</td>
+            <td class="num" data-live="demo1:agree_correct_mean">—</td>
+            <td class="num" data-live="demo1:agree_wrong_mean">—</td></tr>
+      </table>
+      <div class="verdict red">Confidence: <b>higher when wrong</b>
+        (<span data-live="demo1:conf_separation">—</span>).<br>
+        Agreement: separates errors the right way
+        (<span data-live="demo1:agree_separation">—</span>).</div>
+    </div>
+    <div><img class="chart" data-liveimg="../results/demo1_confidence.png" alt="demo1 chart"></div>
+  </div>
+  <div class="note">에이전트 보고 낭독 + 이 표(자동 채움)와 대조. 훅 슬라이드의 0.9457/0.9635가 여기서 재현됨을 명시. → 킥오프 ③.</div>
+</section>
+
+<!-- 15 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Kickoff ③</b> · 09:33</div>
+  <span class="kick">AGENT KICKOFF</span>
+  <h2>Demo 2 — can we trust <i>some</i> alerts completely?</h2>
+  <div class="sub">Hypothesis: to reach a <b>zero-false-alarm</b> (precision 1.0) auto-block policy,
+    a confidence threshold must throw away almost everything;
+    an agreement threshold keeps far more.</div>
+  <div class="prompt">Run Demo 2 (experiments/demo2_selective.py) in the tutorial environment
+(Docker preferred: `docker compose run --rm lab ...`; venv fallback).
+It compares two ways to reach a zero-false-alarm (precision 1.0) alert policy:
+a confidence threshold on a single model vs an agreement threshold on a
+40-expert ensemble, and self-verifies against expected_outputs/demo2.json.
+
+Report: the coverage and TP count for each method, the ratio between them,
+and the verification verdict. One sentence on what this means for a SOC that
+auto-blocks only alerts it can fully trust.<button class="copy">copy</button></div>
+  <div class="note">킥오프 ③. "그동안 selective prediction 개념."</div>
+</section>
+
+<!-- 16 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 3/4</div>
+  <h2>Selective prediction &amp; abstention</h2>
+  <ul class="big">
+    <li>Stop treating every prediction equally — <b>let the model decline</b></li>
+    <li>Coverage ↔ risk trade-off: answer less, be right more</li>
+    <li>The interesting question: <b>which score</b> decides acceptance?</li>
+  </ul>
+  <div class="panel">An abstained prediction is not a failure.
+    It is a <b>correctly routed</b> decision — to a human, to sandboxing, to more data.</div>
+  <div class="note">abstention 경로가 있어야 selective prediction이 의미 있음 → Part 4 운영 트리 예고.</div>
+</section>
+
+<!-- 17 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · buffer</div>
+  <h2>Why precision 1.0 matters in a SOC</h2>
+  <ul class="big">
+    <li>Auto-blocking on false alarms = self-inflicted outage</li>
+    <li>So automation is gated on the alerts you can trust <b>completely</b></li>
+    <li>Every extra TP inside the trusted zone = one incident handled at machine speed</li>
+  </ul>
+  <div class="sub">The size of that trusted zone is an operational KPI —
+    and it depends entirely on the quality of your acceptance signal.</div>
+  <div class="note">[버퍼 슬라이드] 시간이 밀리면 통째로 스킵 가능. 체크포인트 ③이 아직이면 여기서 시간 벌기.</div>
+</section>
+
+<!-- 18 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Checkpoint ③</b> · 09:40 · Demo 2</div>
+  <span class="live-badge">LIVE</span>
+  <h2>Demo 2 — the trusted zone, measured</h2>
+  <div class="cols">
+    <div>
+      <table>
+        <tr><th>Method</th><th class="num">coverage</th><th class="num">TP</th></tr>
+        <tr><td>Confidence ≥ <span data-live="demo2:confidence_threshold">—</span></td>
+            <td class="num" data-live="demo2:confidence_coverage" data-fmt="pct">—</td>
+            <td class="num" data-live="demo2:confidence_tp">—</td></tr>
+        <tr><td>Agreement ≥ <span data-live="demo2:agreement_threshold">—</span></td>
+            <td class="num ok" data-live="demo2:agreement_coverage" data-fmt="pct">—</td>
+            <td class="num ok" data-live="demo2:agreement_tp">—</td></tr>
+      </table>
+      <div class="verdict">At precision 1.0, agreement detects
+        <b><span data-live="demo2:tp_ratio_agreement_over_confidence">—</span>× more attacks</b>
+        than confidence.</div>
+    </div>
+    <div><img class="chart" data-liveimg="../results/demo2_selective.png" alt="demo2 chart"></div>
+  </div>
+  <div class="note">"같은 모델들, 같은 데이터 — acceptance 신호만 바꿨는데 17배." → 킥오프 ④로.</div>
+</section>
+
+<!-- 18b: Lab 2 intro ================================================ -->
+<section class="slide">
+  <div class="tag"><b>Lab 2</b> · CIC-IDS2017</div>
+  <h2>Lab 2 — the dataset you all know</h2>
+  <table>
+    <tr><th>Day</th><th>Traffic</th><th>Role here</th></tr>
+    <tr><td>Monday</td><td>benign only</td><td class="dim">—</td></tr>
+    <tr><td>Tue + Wed</td><td>brute force, DoS, Heartbleed</td><td class="ok"><b>training</b> (30k flows)</td></tr>
+    <tr><td>Thursday</td><td>web attacks, infiltration <span class="dim">(rare)</span></td><td class="warn">drift eval</td></tr>
+    <tr><td>Friday</td><td>botnet, portscan, DDoS <span class="dim">(massive)</span></td><td class="bad">drift eval</td></tr>
+  </table>
+  <div class="sub">2.8M flows · 77 features · same baseline + 40-expert architecture as Lab 1.<br>
+    Yes, CIC-IDS2017 has known flaws — that is <i>why</i> it fits a tutorial about
+    not trusting your pipeline.</div>
+  <div class="note">"다들 아는 그 데이터셋." 결함 공개가 오히려 주제와 부합. 화수 학습→목금 평가 구조 설명.</div>
+</section>
+
+<!-- 19 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Kickoff ④</b> · 09:46</div>
+  <span class="kick">AGENT KICKOFF</span>
+  <h2>Demo 3 — then the week goes on</h2>
+  <div class="sub">Hypothesis: on Friday's unseen attack families, accuracy collapses —
+    and <b>neither</b> confidence nor agreement means will flag it.
+    Something else has to.</div>
+  <div class="prompt">Run Demo 3 (experiments/demo3_cic_drift.py) in the tutorial environment
+(Docker preferred: `docker compose run --rm lab ...`; venv fallback).
+It evaluates CIC-IDS2017 models trained only on Tuesday+Wednesday traffic
+against a same-week holdout, Thursday, and Friday (novel attack families),
+and self-verifies against expected_outputs/demo3_cic.json.
+
+Report holdout vs Friday as a small table: accuracy, mean confidence, mean
+agreement, predicted-attack rate, accept rate — and the verification verdict.
+Final sentence: which signals stayed silent through the collapse, and which
+label-free signals actually moved?<button class="copy">copy</button></div>
+  <div class="note">킥오프 ④ (CIC). "그동안 explainability 이야기."</div>
+</section>
+
+<!-- 20 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 4/4</div>
+  <h2>Explainability — necessary, not sufficient</h2>
+  <ul class="big">
+    <li>Post-hoc XAI (saliency, SHAP, …) <b>describes</b> a decision after the fact</li>
+    <li>An explanation can be plausible and still <b>unverifiable</b></li>
+    <li>Operations need explanations you can <b>test</b>, not admire</li>
+  </ul>
+  <div class="verdict red">"The model looked at these bytes" is a story.<br>
+    "Remove this evidence and the decision flips" is a <b>testable claim</b>.</div>
+  <div class="note">설명 가능 ≠ 검증 가능. 다음 장에서 최소 증거 집합으로 구체화.</div>
+</section>
+
+<!-- 21 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 4/4</div>
+  <h2>Evidence-based verification</h2>
+  <ul class="big">
+    <li><b>Minimal evidence set</b>: smallest feature subset that carries the decision</li>
+    <li><b>Sufficiency</b> — evidence alone reproduces the decision</li>
+    <li><b>Necessity</b> — removing it flips the decision</li>
+    <li>Diverse evidence across experts ⇒ no single shortcut owns the verdict</li>
+  </ul>
+  <div class="panel">This is the design idea behind verification-aware IDS models:
+    make the model emit its evidence — then <b>audit the evidence</b>, not the vibes.</div>
+  <div class="note">VALIDS 충분성/필요성 개념을 일반화해 소개. 깊이는 여기까지 (아키텍처 상세 금지).</div>
+</section>
+
+<!-- 21b: drift in the wild buffer =================================== -->
+<section class="slide">
+  <div class="tag"><b>buffer</b> · drift in the wild</div>
+  <h2>Where drift actually comes from</h2>
+  <ul class="big">
+    <li>App &amp; TLS library updates change fingerprints overnight</li>
+    <li>Infrastructure moves: NAT, CDN, proxy rollouts</li>
+    <li>Seasonal and workload cycles</li>
+    <li>Attackers updating tooling <span class="dim">— the adversarial kind</span></li>
+  </ul>
+  <div class="sub">CIC-IDS2017 packs this into a single week —
+    by Friday, the model faces attack families it has never seen.</div>
+  <div class="note">[버퍼] 체크포인트 ④ 대기용. 요일 시나리오가 현실 드리프트의 축소판임을 정당화.</div>
+</section>
+
+<!-- 22 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Checkpoint ④</b> · 09:53 · Demo 3</div>
+  <span class="live-badge">LIVE</span>
+  <h2>Demo 3 — a real collapse, in real silence</h2>
+  <div class="cols">
+    <div>
+      <table>
+        <tr><th>Signal</th><th class="num">holdout</th><th class="num">friday</th></tr>
+        <tr><td>Accuracy <span class="dim">(needs labels!)</span></td>
+            <td class="num" data-live="demo3_cic:holdout_acc">—</td>
+            <td class="num bad" data-live="demo3_cic:friday_acc">—</td></tr>
+        <tr><td>Confidence <span class="dim">mean</span></td>
+            <td class="num" data-live="demo3_cic:holdout_conf">—</td>
+            <td class="num" data-live="demo3_cic:friday_conf">—</td></tr>
+        <tr><td>Agreement <span class="dim">mean</span></td>
+            <td class="num" data-live="demo3_cic:holdout_agree">—</td>
+            <td class="num" data-live="demo3_cic:friday_agree">—</td></tr>
+        <tr><td class="ok">Predicted-attack rate</td>
+            <td class="num" data-live="demo3_cic:holdout_pred_attack_rate" data-fmt="pct">—</td>
+            <td class="num ok" data-live="demo3_cic:friday_pred_attack_rate" data-fmt="pct">—</td></tr>
+        <tr><td class="ok">Accept rate</td>
+            <td class="num" data-live="demo3_cic:holdout_accept_rate" data-fmt="pct">—</td>
+            <td class="num ok" data-live="demo3_cic:friday_accept_rate" data-fmt="pct">—</td></tr>
+      </table>
+      <div class="verdict red"><b><span data-live="demo3_cic:friday_wrong_conf90">—</span> wrong Friday
+        verdicts carry confidence ≥ 0.9</b> — and 40 experts stay near-unanimous.
+        The means are silent; the <b>rates</b> are what move.</div>
+    </div>
+    <div><img class="chart" data-liveimg="../results/demo3_cic_drift.png" alt="demo3 chart"></div>
+  </div>
+  <div class="note">"운영엔 라벨이 없다 = acc 행은 가려져 있다고 상상하라. 평균은 침묵, 레이트가 비명." Lab1과의 대비(합의도 침묵!)를 강조 → Part 4로.</div>
+</section>
+
+<!-- 23 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 4</b> · Operations</div>
+  <h2>Accept / Review / Withhold</h2>
+  <table class="big">
+    <tr><th>Condition (example policy)</th><th>Route</th></tr>
+    <tr><td>Agreement ≥ high bar <span class="dim">(our lab: 0.775 ⇒ precision 1.0)</span></td>
+        <td class="ok"><b>Accept</b> — automate</td></tr>
+    <tr><td>Agreement mid-range, evidence stable</td>
+        <td class="warn"><b>Review</b> — analyst triage</td></tr>
+    <tr><td>Agreement low, or signals disagree with confidence</td>
+        <td class="bad"><b>Withhold</b> — abstain, collect, escalate</td></tr>
+  </table>
+  <div class="sub">One slide to take home: route <b>every</b> AI output through this gate —
+    thresholds tuned on your own validation traffic.</div>
+  <div class="note">청중이 가져갈 1장. 임계값은 예시일 뿐, 자기 트래픽으로 튜닝하라 강조.</div>
+</section>
+
+<!-- 24 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 4</b> · Operations</div>
+  <h2>Signal → action map</h2>
+  <table>
+    <tr><th>Observation</th><th>Interpretation</th><th>Action</th></tr>
+    <tr><td>Confidence high, agreement low</td><td>Likely shortcut / evasion</td><td>Distrust confidence; review</td></tr>
+    <tr><td>Agreement high &amp; stable</td><td>Trusted zone</td><td>Automate (block/close)</td></tr>
+    <tr><td>Agreement trending down fleet-wide</td><td>Drift onset</td><td>Trigger recalibration / retraining</td></tr>
+    <tr><td>Confidence rising while agreement falls</td><td class="bad">The lying pattern (Demo 3)</td><td>Freeze automation; investigate</td></tr>
+  </table>
+  <div class="note">4행 모두 오늘 데모에서 실제로 본 패턴과 연결해 설명.</div>
+</section>
+
+<!-- 24b: policy tuning take-home prompt ============================= -->
+<section class="slide">
+  <div class="tag"><b>Part 4</b> · hands-on</div>
+  <span class="kick" style="background:var(--ok);">TAKE-HOME PROMPT</span>
+  <h2>Tune the gate on your own numbers</h2>
+  <div class="prompt">Using the trained lab (run setup first), sweep agreement thresholds from 0.5
+to 1.0 and build an accept/review/withhold policy table: for target precisions
+0.95, 0.99 and 1.0, report the best threshold, coverage, TP and FP counts.
+Put the sweep in a new file experiments/policy_sweep.py — do not modify
+src/config.py — write the table to results/policy.json and print it.<button class="copy">copy</button></div>
+  <div class="sub">prompts/04_policy_tuning.md · not run live — this is your homework, on your traffic.</div>
+  <div class="note">라이브로 안 돌림(시간). "이 게이트를 여러분 트래픽으로 튜닝하는 것이 숙제."</div>
+</section>
+
+<!-- 25 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 4</b> · Operations</div>
+  <h2>Deployment checklist</h2>
+  <ul class="big">
+    <li>☐ Measure calibration on held-out data — assume it is broken until shown otherwise</li>
+    <li>☐ Design the <b>abstention path</b> before turning on automation</li>
+    <li>☐ Emit label-free telemetry (agreement, evidence stability) from day one</li>
+    <li>☐ Watch signal <b>trends</b>, not single values</li>
+    <li>☐ Pin everything — env, data, model, expected numbers — like we did today</li>
+  </ul>
+  <div class="note">체크리스트 낭독은 빠르게. 마지막 항목이 아티팩트/재현성 철학 연결.</div>
+</section>
+
+<!-- 26 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Part 4</b> · Honest limits</div>
+  <h2>What today's lab does <span class="bad" style="color:var(--bad)">not</span> prove</h2>
+  <ul class="big">
+    <li>Lab 1 is synthetic by design — it <i>demonstrates</i> failure mechanisms, not real-world rates</li>
+    <li>Agreement is not a silver bullet — you watched Friday's novel attacks fool
+        <b>all 40 experts at once</b>, live, on real data</li>
+    <li>Lab 2 is one dataset, one week — thresholds and rates do not transfer; recalibrate on your traffic</li>
+    <li>Generic ensembles ≠ verification-aware models — evidence-level telemetry is the next step up</li>
+    <li>Agent-driven runs add their own variance — verify outputs, always</li>
+  </ul>
+  <div class="note">한계를 먼저 말하면 질문 절반이 사라진다. 4번째 불릿이 VALIDS류 연구 필요성으로 연결되는 다리.</div>
+</section>
+
+<!-- 27 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Wrap-up ①</b> · 10:08</div>
+  <span class="live-badge">LIVE</span>
+  <h2>The whole story, on one screen</h2>
+  <div class="panel big" style="margin-top:40px;">
+    → switching to <b>http://localhost:8000/dashboard/</b>
+    <div class="dim" style="font-size:20px; margin-top:12px;">
+      Three demos, every number verified against the pinned reference,
+      all reproduced in this room within the last hour.</div>
+  </div>
+  <div class="sub">Press <b>D</b> to open the dashboard.</div>
+  <div class="note">브라우저 탭 전환(D 키). 대시보드에서 3개 카드 순서대로 ~7분 워크스루. 슬라이드로 복귀는 탭 전환.</div>
+</section>
+
+<!-- 27b: explore prompts ============================================ -->
+<section class="slide">
+  <div class="tag"><b>Wrap-up</b> · keep playing</div>
+  <span class="kick" style="background:var(--ok);">TAKE-HOME PROMPTS</span>
+  <h2>Three ways to break the lab <span class="dim">(please do)</span></h2>
+  <ul class="big">
+    <li><b>Stress it</b> — regenerate test sets with harsher evasion via datagen parameters</li>
+    <li><b>Sabotage the ensemble</b> — add experts that all see the shortcut; watch agreement degrade</li>
+    <li><b>Bring your own model</b> — score its confidence on our evasive subset</li>
+  </ul>
+  <div class="sub">Ready-made agent prompts for all three: <b>prompts/99_explore.md</b></div>
+  <div class="note">"깨뜨려 보라"가 최고의 숙제. 프롬프트 3종은 리포에 준비되어 있음.</div>
+</section>
+
+<!-- 28 =============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Wrap-up ②</b></div>
+  <h2>Take-home</h2>
+  <ul class="big">
+    <li><b>Accuracy ≠ Reliability</b> — the best metric is the one you cannot see in production</li>
+    <li><b>Verify with multiple label-free signals</b> — agreement, evidence, trends</li>
+    <li><b>Never treat predictions equally</b> — accept / review / withhold</li>
+  </ul>
+  <div class="panel">The way I treated my agent today — delegate, then <b>verify the output</b> —
+    is exactly how your SOC should treat every AI prediction.</div>
+  <div class="sub" style="margin-top:30px;">
+    Artifact &amp; prompts: <b>github.com/&lt;repo-url-TBD&gt;</b> <span class="dim">(QR here)</span><br>
+    <b>Questions? Please find me right after the session — happy to talk.</b></div>
+  <div class="note">회수 문장 → QR → "질문은 세션 끝나고 개별로." 다음 발표(10:40 Tutorial 2) 언급하며 마무리.</div>
+</section>
+
+<!-- A1 ============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Appendix</b> · A1</div>
+  <h2>Writing prompts agents can't fudge</h2>
+  <ul class="big">
+    <li><b>Self-contained</b> — paths, environment, no conversation context needed</li>
+    <li><b>Verification built in</b> — "run AND check against the pinned reference"</li>
+    <li><b>Tool-neutral</b> — same prompt for Claude, Codex, anything</li>
+    <li><b>Failure paths spelled out</b> — Docker → venv fallback, in the prompt</li>
+    <li><b>Prompts are artifacts</b> — versioned, rehearsed, frozen</li>
+  </ul>
+  <div class="panel">Rule 2 is this tutorial applied to itself:
+    never accept an agent's "done" without a verifiable check.</div>
+  <div class="note">질문 들어오면 사용. 자기참조 포인트(2번) 강조.</div>
+</section>
+
+<!-- A2 ============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Appendix</b> · A2 · backup</div>
+  <h2>Pinned reference — Demo 1</h2>
+  <table class="big">
+    <tr><th>Metric</th><th class="num">Value</th></tr>
+    <tr><td>Baseline accuracy</td><td class="num">0.6917</td></tr>
+    <tr><td>Confidence — correct / wrong</td><td class="num">0.9457 / <span class="bad">0.9635</span></td></tr>
+    <tr><td>Agreement — correct / wrong</td><td class="num"><span class="ok">0.8873</span> / 0.8237</td></tr>
+  </table>
+  <div class="sub">expected_outputs/demo1.json · reference: pinned Docker image</div>
+  <div class="note">라이브 전면 실패 시 백업 낭독용.</div>
+</section>
+
+<!-- A3 ============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Appendix</b> · A3 · backup</div>
+  <h2>Pinned reference — Demo 2</h2>
+  <table class="big">
+    <tr><th>Method</th><th class="num">threshold</th><th class="num">coverage</th><th class="num">TP</th></tr>
+    <tr><td>Confidence</td><td class="num">0.988</td><td class="num">1.90%</td><td class="num">76</td></tr>
+    <tr><td>Agreement</td><td class="num">0.775</td><td class="num ok">32.17%</td><td class="num ok">1,287</td></tr>
+  </table>
+  <div class="verdict">16.9× more attacks detected at precision 1.0 (4,000 samples, 1,959 attacks).</div>
+  <div class="note">백업. expected_outputs/demo2.json.</div>
+</section>
+
+<!-- A4 ============================================================== -->
+<section class="slide">
+  <div class="tag"><b>Appendix</b> · A4 · backup</div>
+  <h2>Pinned reference — Demo 3 (CIC-IDS2017)</h2>
+  <table>
+    <tr><th>Slice</th><th class="num">accuracy</th><th class="num">conf</th><th class="num">agree</th><th class="num">pred-att%</th><th class="num">accept%</th></tr>
+    <tr><td>holdout</td><td class="num">0.9614</td><td class="num">0.9162</td><td class="num">0.9690</td><td class="num">21.7%</td><td class="num">13.9%</td></tr>
+    <tr><td>thursday</td><td class="num">0.9818</td><td class="num">0.9327</td><td class="num">0.9821</td><td class="num">1.3%</td><td class="num">0.0%</td></tr>
+    <tr><td>friday</td><td class="num bad">0.6858</td><td class="num">0.9126</td><td class="num">0.9679</td><td class="num ok">11.2%</td><td class="num ok">7.9%</td></tr>
+  </table>
+  <div class="sub">1,258 wrong Friday verdicts at conf ≥ 0.9 · expected_outputs/demo3_cic.json<br>
+    <span class="dim">Extra: the synthetic σ-drift experiment lives on as
+    experiments/demo3_drift.py (acc 0.71→0.34, conf 0.95→0.99↑, agree 0.88→0.80↓).</span></div>
+  <div class="note">백업. "평균은 침묵, 레이트는 이동, 1258건 고확신 오답" 세 가지만 읽어도 충분.</div>
+</section>
+
+</div>
+
+<div id="hud">1 / 28</div>
+<div id="bar"></div>
+<div id="notes"></div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+const hud = document.getElementById("hud");
+const bar = document.getElementById("bar");
+const notesBox = document.getElementById("notes");
+let cur = 0, showNotes = false;
+
+function fit() {
+  const s = Math.min(innerWidth / 1280, innerHeight / 720);
+  slides.forEach(el => el.style.transform = `scale(${s})`);
+}
+function go(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((el, j) => el.classList.toggle("active", j === cur));
+  hud.textContent = `${cur + 1} / ${slides.length}`;
+  bar.style.width = (100 * (cur + 1) / slides.length) + "%";
+  location.hash = "#" + (cur + 1);
+  const n = slides[cur].querySelector(".note");
+  notesBox.textContent = n ? n.textContent : "";
+  notesBox.style.display = showNotes && n ? "block" : "none";
+}
+addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) go(cur + 1);
+  else if (["ArrowLeft", "PageUp"].includes(e.key)) go(cur - 1);
+  else if (e.key === "Home") go(0);
+  else if (e.key === "End") go(slides.length - 1);
+  else if (e.key.toLowerCase() === "n") { showNotes = !showNotes; go(cur); }
+  else if (e.key.toLowerCase() === "d") open("../dashboard/", "dashboard");
+});
+addEventListener("resize", fit);
+addEventListener("hashchange", () => {
+  const h = parseInt(location.hash.slice(1)); if (h) go(h - 1);
+});
+
+// clipboard for prompt boxes
+document.querySelectorAll(".prompt .copy").forEach(btn => {
+  btn.onclick = async () => {
+    const text = btn.parentElement.textContent.replace(/copy$/, "").trim();
+    try { await navigator.clipboard.writeText(text);
+          btn.textContent = "copied!"; setTimeout(() => btn.textContent = "copy", 1500); }
+    catch { btn.textContent = "ctrl+c?"; }
+  };
+});
+
+// ---- live bindings: results/*.json + models/meta.json ------------------
+const cache = {};
+async function poll() {
+  for (const name of ["demo1", "demo2", "demo3", "demo3_cic"]) {
+    try { const r = await fetch(`../results/${name}.json`); if (r.ok) cache[name] = await r.json(); }
+    catch {}
+  }
+  try {
+    const r = await fetch("../models/meta.json");
+    if (r.ok) { const m = await r.json();
+      m.dataset_sha8 = (m.dataset_sha256 || "").slice(0, 8); cache.meta = m; }
+  } catch {}
+  document.querySelectorAll("[data-live]").forEach(el => {
+    const [src, key] = el.dataset.live.split(":");
+    const v = cache[src]?.[key];
+    if (v === undefined) return;
+    el.textContent = el.dataset.fmt === "pct" ? (100 * v).toFixed(1) + "%"
+                   : typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(4)) : v;
+    el.classList.add("filled");
+  });
+  document.querySelectorAll("img[data-liveimg]").forEach(img => {
+    if (img.dataset.loaded === "1") return;
+    const probe = new Image();
+    probe.onload = () => { img.src = probe.src; img.dataset.loaded = "1"; img.style.display = ""; };
+    probe.src = img.dataset.liveimg + "?t=" + Date.now();
+    if (!img.dataset.loaded) img.style.display = "none";
+  });
+}
+poll(); setInterval(poll, 5000);
+
+fit();
+go(parseInt(location.hash.slice(1) || "1") - 1);
+</script>
+</body>
+</html>

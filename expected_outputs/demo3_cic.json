@@ -1,0 +1,21 @@
+{
+  "tuned_threshold": 0.8562,
+  "holdout_acc": 0.9614,
+  "holdout_conf": 0.9162,
+  "holdout_agree": 0.969,
+  "holdout_pred_attack_rate": 0.2173,
+  "holdout_accept_rate": 0.1391,
+  "holdout_wrong_conf90": 62,
+  "thursday_acc": 0.9818,
+  "thursday_conf": 0.9327,
+  "thursday_agree": 0.9821,
+  "thursday_pred_attack_rate": 0.0134,
+  "thursday_accept_rate": 0.0,
+  "thursday_wrong_conf90": 45,
+  "friday_acc": 0.6858,
+  "friday_conf": 0.9126,
+  "friday_agree": 0.9679,
+  "friday_pred_attack_rate": 0.1124,
+  "friday_accept_rate": 0.0787,
+  "friday_wrong_conf90": 1258
+}

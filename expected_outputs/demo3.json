@@ -1,0 +1,11 @@
+{
+  "sigma0_0_acc": 0.713,
+  "sigma0_0_conf": 0.9513,
+  "sigma0_0_agree": 0.8806,
+  "sigma1_0_acc": 0.584,
+  "sigma1_0_conf": 0.972,
+  "sigma1_0_agree": 0.8416,
+  "sigma3_0_acc": 0.344,
+  "sigma3_0_conf": 0.9907,
+  "sigma3_0_agree": 0.7975
+}

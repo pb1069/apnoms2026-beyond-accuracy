@@ -51,6 +51,14 @@
   .live-badge { display:inline-block; align-self:flex-start; background:#301a1f; color:var(--bad);
           font-weight:700; font-size:15px; letter-spacing:1px; border-radius:999px;
           padding:4px 14px; margin-bottom:8px; }
+  .run { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:16px; }
+  .runbtn { background:var(--accent); color:#08101f; border:0; border-radius:8px;
+            padding:8px 16px; font:600 15px "Segoe UI",sans-serif; cursor:pointer; }
+  .runbtn:hover { filter:brightness(1.12); }
+  .runpill { color:var(--dim); font-size:14px; }
+  .runout { background:#0b101c; border:1px solid #2a3450; border-radius:8px;
+            padding:10px 14px; margin-top:12px; font:12.5px/1.45 Consolas,monospace;
+            color:#9fb2d8; max-height:170px; overflow:auto; white-space:pre-wrap; }
   [data-live] { color:var(--warn); font-weight:600; }
   [data-live].filled { color:var(--ink); }
   img.chart { max-height:300px; border-radius:10px; background:#fff; margin-top:14px; align-self:flex-start; }
@@ -228,6 +236,9 @@
     <tr><td>Setup wall-clock</td><td class="num"><span data-live="meta:elapsed_sec">—</span> s</td></tr>
     <tr><td>Dataset content hash</td><td class="num" data-live="meta:dataset_sha8">—</td></tr>
   </table>
+  <div class="run"><button class="runbtn" onclick="runStage('smoke', this)">▶ Run smoke test</button>
+    <span class="runpill" data-pill="smoke">one-click · presenter machine</span></div>
+  <pre class="runout" id="out-smoke" style="display:none"></pre>
   <div class="sub">Environment, dataset, and every model spec are <b>pinned</b> —
     the numbers you are about to see are the numbers you will get at home.</div>
   <div class="note">에이전트 보고 확인 + 이 표가 자동으로 채워졌는지 확인. 안 채워졌으면 폴백: 터미널 출력 보여주기. 버퍼 여유 있으면 대시보드 빈 화면도 잠깐.</div>
@@ -264,6 +275,9 @@
     <li>Every seed, split and hyperparameter pinned in <b>src/config.py</b></li>
     <li>Docker and native runs reproduce to 4 decimal places</li>
   </ul>
+  <div class="run"><button class="runbtn" onclick="runStage('train_synth', this)">▶ Retrain Lab 1 live (~30 s)</button>
+    <span class="runpill" data-pill="train_synth">41 models · pinned seeds · same numbers every time</span></div>
+  <pre class="runout" id="out-train_synth" style="display:none"></pre>
   <div class="note">"다양성 제약 = 한 shortcut이 판정을 독점 못 하게." 검증 인지형 IDS 아이디어의 미니어처.</div>
 </section>
 
@@ -412,6 +426,8 @@ Include the verification verdict.<button class="copy">copy</button></div>
         (<span data-live="demo1:conf_separation">—</span>).<br>
         Agreement: separates errors the right way
         (<span data-live="demo1:agree_separation">—</span>).</div>
+      <div class="run"><button class="runbtn" onclick="runStage('demo1', this)">▶ Run Demo 1</button>
+        <span class="runpill" data-pill="demo1">or paste the agent prompt</span></div>
     </div>
     <div><img class="chart" data-liveimg="../results/demo1_confidence.png" alt="demo1 chart"></div>
   </div>
@@ -485,6 +501,8 @@ auto-blocks only alerts it can fully trust.<button class="copy">copy</button></d
       <div class="verdict">At precision 1.0, agreement detects
         <b><span data-live="demo2:tp_ratio_agreement_over_confidence">—</span>× more attacks</b>
         than confidence.</div>
+      <div class="run"><button class="runbtn" onclick="runStage('demo2', this)">▶ Run Demo 2</button>
+        <span class="runpill" data-pill="demo2">or paste the agent prompt</span></div>
     </div>
     <div><img class="chart" data-liveimg="../results/demo2_selective.png" alt="demo2 chart"></div>
   </div>
@@ -502,6 +520,12 @@ auto-blocks only alerts it can fully trust.<button class="copy">copy</button></d
     <tr><td>Thursday</td><td>web attacks, infiltration <span class="dim">(rare)</span></td><td class="warn">drift eval</td></tr>
     <tr><td>Friday</td><td>botnet, portscan, DDoS <span class="dim">(massive)</span></td><td class="bad">drift eval</td></tr>
   </table>
+  <div class="run">
+    <button class="runbtn" onclick="runStage('download', this, 'out-cic')">▶ 1 Download</button><span class="runpill" data-pill="download"></span>
+    <button class="runbtn" onclick="runStage('prepare', this, 'out-cic')">▶ 2 Preprocess</button><span class="runpill" data-pill="prepare"></span>
+    <button class="runbtn" onclick="runStage('train_cic', this, 'out-cic')">▶ 3 Train</button><span class="runpill" data-pill="train_cic"></span>
+  </div>
+  <pre class="runout" id="out-cic" style="display:none"></pre>
   <div class="sub">2.8M flows · 77 features · same baseline + 40-expert architecture as Lab 1.<br>
     Yes, CIC-IDS2017 has known flaws — that is <i>why</i> it fits a tutorial about
     not trusting your pipeline.</div>
@@ -601,6 +625,8 @@ label-free signals actually moved?<button class="copy">copy</button></div>
       <div class="verdict red"><b><span data-live="demo3_cic:friday_wrong_conf90">—</span> wrong Friday
         verdicts carry confidence ≥ 0.9</b> — and 40 experts stay near-unanimous.
         The means are silent; the <b>rates</b> are what move.</div>
+      <div class="run"><button class="runbtn" onclick="runStage('demo3', this)">▶ Run Demo 3</button>
+        <span class="runpill" data-pill="demo3">or paste the agent prompt</span></div>
     </div>
     <div><img class="chart" data-liveimg="../results/demo3_cic_drift.png" alt="demo3 chart"></div>
   </div>
@@ -860,6 +886,28 @@ async function toggleTerm(big) {
     termBox.classList.remove("big"); return; // big -> small first
   }
   termBox.style.display = termBox.style.display === "block" ? "none" : "block";
+}
+
+// one-click pipeline runner: buttons POST to the local serve.py run API
+// (whitelisted stages, presenter machine only; on the public audit view the
+// buttons degrade to "presenter server only").
+async function runStage(stage, btn, outId) {
+  const box = btn.closest(".run");
+  const pill = box.querySelector(`[data-pill="${stage}"]`);
+  const out = document.getElementById(outId || ("out-" + stage));
+  let r;
+  try { r = await fetch(`/api/run?stage=${stage}`, { method: "POST" }); }
+  catch { pill.textContent = "presenter server only"; return; }
+  if (!r.ok && r.status !== 409) { pill.textContent = "presenter server only"; return; }
+  pill.textContent = "running…";
+  const timer = setInterval(async () => {
+    let st;
+    try { st = await (await fetch(`/api/status?stage=${stage}`)).json(); } catch { return; }
+    if (out && st.tail) { out.style.display = "block"; out.textContent = st.tail;
+                          out.scrollTop = out.scrollHeight; }
+    if (st.state === "done") { clearInterval(timer); pill.textContent = `done ✓ ${st.elapsed}s`; }
+    else if (st.state === "failed") { clearInterval(timer); pill.textContent = `failed (exit ${st.exit})`; }
+  }, 1000);
 }
 
 // clipboard for prompt boxes

@@ -56,6 +56,22 @@
             padding:8px 16px; font:600 15px "Segoe UI",sans-serif; cursor:pointer; }
   .runbtn:hover { filter:brightness(1.12); }
   .runpill { color:var(--dim); font-size:14px; }
+  .execgrid { display:flex; gap:36px; margin-top:6px; flex:1; min-height:0; }
+  .execleft { flex:0 0 46%; display:flex; flex-direction:column; }
+  .execright { flex:1; display:flex; flex-direction:column; }
+  .lbl { font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--dim);
+         margin:18px 0 6px; }
+  .lbl:first-child { margin-top:0; }
+  .cmd { position:relative; background:#0b101c; border:1px solid #2a3450; border-radius:8px;
+         padding:12px 16px; font:14px/1.5 Consolas,monospace; color:#c9d6ee;
+         white-space:pre-wrap; }
+  .cmd .copy, .prompt.small .copy { position:absolute; top:8px; right:8px;
+         font:13px "Segoe UI",sans-serif; background:var(--accent); color:#08101f;
+         border:0; border-radius:6px; padding:4px 10px; cursor:pointer; }
+  .prompt.small { font-size:13px; padding:14px 16px; margin-top:0; max-height:250px; overflow:auto; }
+  .screen { flex:1; min-height:0; background:#0b101c; border:1px solid #2a3450;
+            border-radius:10px; padding:14px 16px; font:13px/1.5 Consolas,monospace;
+            color:#9fb2d8; overflow:auto; white-space:pre-wrap; margin:0; }
   .runout { background:#0b101c; border:1px solid #2a3450; border-radius:8px;
             padding:10px 14px; margin-top:12px; font:12.5px/1.45 Consolas,monospace;
             color:#9fb2d8; max-height:170px; overflow:auto; white-space:pre-wrap; }
@@ -144,22 +160,45 @@
   <div class="tag"><b>Kickoff ①</b> · 09:03</div>
   <span class="kick">AGENT KICKOFF</span>
   <h2>Setup — an agent builds the lab while we talk</h2>
-  <div class="prompt" id="p00">Set up this tutorial environment and prove it works.
+  <div class="panel">An agent is about to build and verify the whole lab — while we talk.<br>
+    <span class="dim">Next page: run setup your way — manual, one-click, or agent prompt.</span></div>
+  <div class="sub">Repo: <b>github.com/pb1069/apnoms2026-beyond-accuracy</b> · prompts/00_setup.md</div>
+  <div class="note">킥오프 선언만. 실행은 다음 페이지에서 (Shift+T 터미널 오버레이 or 원클릭). "환경은 지금부터 에이전트가 만듭니다."</div>
+</section>
+
+<!-- exec page — Setup -->
+<section class="slide">
+  <div class="tag"><b>Run it</b> · Setup</div>
+  <h2 style="margin-bottom:18px;">Three ways to run it <span class="dim">— setup &amp; verify</span></h2>
+  <div class="execgrid">
+    <div class="execleft">
+      <div class="lbl">Manual</div>
+      <div class="cmd">docker compose build
+docker compose run --rm lab python scripts/smoke_test.py<button class="copy">copy</button></div>
+      <div class="lbl">One-click · presenter</div>
+      <div class="run" style="margin-top:0;">
+        <button class="runbtn" onclick="runStage('smoke', this, 'scr-setup')">▶ Verify artifacts</button><span class="runpill" data-pill="smoke">idle</span></div>
+      <div class="run" style="margin-top:8px;">
+        <button class="runbtn" onclick="runStage('train_synth', this, 'scr-setup')">▶ Retrain Lab 1 (~30 s)</button><span class="runpill" data-pill="train_synth"></span></div>
+      <div class="lbl">Agent · paste the prompt <span style="text-transform:none; letter-spacing:0;">(prompts/00_setup.md)</span></div>
+      <div class="prompt small">Set up this tutorial environment and prove it works.
 
 1. If Docker is available: `docker compose build`, then verify the shipped
-   artifacts (pinned data + pre-trained models) inside the container:
+   artifacts inside the container:
      docker compose run --rm lab python scripts/smoke_test.py
    On an SSL build error (corporate proxy), retry once with
    PIP_EXTRA_OPTS="--trusted-host pypi.org --trusted-host files.pythonhosted.org".
-   Only if Docker is truly unavailable, fall back to a native venv:
-   `pip install -r requirements.txt`, then run the same script directly.
-   Only if models are reported missing: rebuild with `python src/train.py`.
-2. Then start the results dashboard and confirm
-   http://localhost:8000/dashboard/ responds.
-3. Report: which environment path you used, the smoke test PASS/FAIL lines,
-   and whether the CIC-IDS2017 track was present. Do not edit any source file.<button class="copy">copy</button></div>
-  <div class="sub">Repo: <b>github.com/pb1069/apnoms2026-beyond-accuracy</b> · prompts/00_setup.md</div>
-  <div class="note">킥오프 의식: Shift+T로 터미널 오버레이 크게 → 프롬프트 붙여넣기(실제 터미널에서) → t로 축소/숨김. 창 전환 없이 덱 안에서 진행. "환경은 지금부터 에이전트가 만듭니다."</div>
+   Only if Docker is truly unavailable, fall back to a native venv.
+2. Start the results dashboard and confirm http://localhost:8000/dashboard/ responds.
+3. Report: environment path used, the smoke test PASS/FAIL lines, and whether
+   the CIC-IDS2017 track was present. Do not edit any source file.<button class="copy">copy</button></div>
+    </div>
+    <div class="execright">
+      <div class="lbl">Live output <span style="text-transform:none; letter-spacing:0;">(button run · press T to share the agent terminal)</span></div>
+      <pre class="screen" id="scr-setup">— idle — verify the shipped artifacts, or retrain Lab 1 live and watch the pinned numbers reappear</pre>
+    </div>
+  </div>
+  <div class="note">Setup 실행 페이지. 재학습 버튼 = “seed 고정이라 매번 같은 숫자” 시연용. 에이전트 경로면 T로 터미널 공유.</div>
 </section>
 
 <!-- 5 ================================================================ -->
@@ -236,9 +275,6 @@
     <tr><td>Setup wall-clock</td><td class="num"><span data-live="meta:elapsed_sec">—</span> s</td></tr>
     <tr><td>Dataset content hash</td><td class="num" data-live="meta:dataset_sha8">—</td></tr>
   </table>
-  <div class="run"><button class="runbtn" onclick="runStage('smoke', this)">▶ Run smoke test</button>
-    <span class="runpill" data-pill="smoke">one-click · presenter machine</span></div>
-  <pre class="runout" id="out-smoke" style="display:none"></pre>
   <div class="sub">Environment, dataset, and every model spec are <b>pinned</b> —
     the numbers you are about to see are the numbers you will get at home.</div>
   <div class="note">에이전트 보고 확인 + 이 표가 자동으로 채워졌는지 확인. 안 채워졌으면 폴백: 터미널 출력 보여주기. 버퍼 여유 있으면 대시보드 빈 화면도 잠깐.</div>
@@ -275,9 +311,6 @@
     <li>Every seed, split and hyperparameter pinned in <b>src/config.py</b></li>
     <li>Docker and native runs reproduce to 4 decimal places</li>
   </ul>
-  <div class="run"><button class="runbtn" onclick="runStage('train_synth', this)">▶ Retrain Lab 1 live (~30 s)</button>
-    <span class="runpill" data-pill="train_synth">41 models · pinned seeds · same numbers every time</span></div>
-  <pre class="runout" id="out-train_synth" style="display:none"></pre>
   <div class="note">"다양성 제약 = 한 shortcut이 판정을 독점 못 하게." 검증 인지형 IDS 아이디어의 미니어처.</div>
 </section>
 
@@ -330,16 +363,39 @@
   <div class="sub">Hypothesis for Demo 1: on traffic with evasive samples,
     mean confidence of <b>wrong</b> predictions ≥ mean confidence of correct ones.</div>
   <span class="kick" style="margin-top:26px;">AGENT KICKOFF</span>
-  <div class="prompt">Run Demo 1 (experiments/demo1_confidence.py) in the tutorial environment:
-Docker preferred (image apnoms2026-beyond-accuracy, already built by setup;
-`docker compose run --rm lab ...`), venv fallback otherwise. The script verifies its own numbers against
-expected_outputs/demo1.json at ±0.005.
-
-Then answer, in two sentences, based only on the output:
-which group of predictions — correct or wrong — has the HIGHER mean confidence,
-and which signal (confidence vs ensemble agreement) actually separates errors?
-Include the verification verdict.<button class="copy">copy</button></div>
+  <div class="panel">Kickoff: hand it to the agent — or run it yourself.<br>
+    <span class="dim">Next page: manual command · one-click button · agent prompt, side by side.</span></div>
   <div class="note">킥오프 ② 의식. "결과는 6분 뒤에 확인합니다. 그동안 uncertainty 이야기."</div>
+</section>
+
+<!-- 11b: exec page for demo 1 ======================================= -->
+<section class="slide">
+  <div class="tag"><b>Run it</b> · Demo 1</div>
+  <h2 style="margin-bottom:18px;">Three ways to run it <span class="dim">— pick yours</span></h2>
+  <div class="execgrid">
+    <div class="execleft">
+      <div class="lbl">Manual · Docker</div>
+      <div class="cmd">docker compose run --rm lab   python experiments/demo1_confidence.py<button class="copy">copy</button></div>
+      <div class="lbl">One-click · presenter</div>
+      <div class="run" style="margin-top:0;">
+        <button class="runbtn" onclick="runStage('demo1', this, 'scr-demo1')">▶ Run Demo 1</button>
+        <span class="runpill" data-pill="demo1">idle</span></div>
+      <div class="lbl">Agent · paste the prompt</div>
+      <div class="prompt small">Run Demo 1 (experiments/demo1_confidence.py) in the tutorial environment:
+Docker preferred (image apnoms2026-beyond-accuracy, already built by setup;
+`docker compose run --rm lab ...`), venv fallback otherwise. The script
+verifies its own numbers against expected_outputs/demo1.json at ±0.005.
+
+Then answer, in two sentences, based only on the output: which group of
+predictions — correct or wrong — has the HIGHER mean confidence, and which
+signal actually separates errors? Include the verification verdict.<button class="copy">copy</button></div>
+    </div>
+    <div class="execright">
+      <div class="lbl">Live output <span style="text-transform:none; letter-spacing:0;">(button run · press T to share the agent terminal)</span></div>
+      <pre class="screen" id="scr-demo1">— idle — press ▶ Run Demo 1, or run it manually / via agent and watch here</pre>
+    </div>
+  </div>
+  <div class="note">실행 페이지 견본. 버튼이면 오른쪽 화면에 출력이 흐르고, 에이전트면 T 오버레이로 터미널 공유. 어느 쪽이든 결과는 다음 체크포인트 표에 자동 반영.</div>
 </section>
 
 <!-- 12 =============================================================== -->
@@ -426,8 +482,6 @@ Include the verification verdict.<button class="copy">copy</button></div>
         (<span data-live="demo1:conf_separation">—</span>).<br>
         Agreement: separates errors the right way
         (<span data-live="demo1:agree_separation">—</span>).</div>
-      <div class="run"><button class="runbtn" onclick="runStage('demo1', this)">▶ Run Demo 1</button>
-        <span class="runpill" data-pill="demo1">or paste the agent prompt</span></div>
     </div>
     <div><img class="chart" data-liveimg="../results/demo1_confidence.png" alt="demo1 chart"></div>
   </div>
@@ -442,7 +496,25 @@ Include the verification verdict.<button class="copy">copy</button></div>
   <div class="sub">Hypothesis: to reach a <b>zero-false-alarm</b> (precision 1.0) auto-block policy,
     a confidence threshold must throw away almost everything;
     an agreement threshold keeps far more.</div>
-  <div class="prompt">Run Demo 2 (experiments/demo2_selective.py) in the tutorial environment
+  <div class="panel">Kickoff: hand it to the agent — or run it yourself.<br>
+    <span class="dim">Next page: manual command · one-click button · agent prompt, side by side.</span></div>
+  <div class="note">킥오프 ③ 선언. 실행은 다음 페이지. "그동안 selective prediction 개념."</div>
+</section>
+
+<!-- exec page — Demo 2 -->
+<section class="slide">
+  <div class="tag"><b>Run it</b> · Demo 2</div>
+  <h2 style="margin-bottom:18px;">Three ways to run it <span class="dim">— precision-1.0 gate</span></h2>
+  <div class="execgrid">
+    <div class="execleft">
+      <div class="lbl">Manual</div>
+      <div class="cmd">docker compose run --rm lab \
+  python experiments/demo2_selective.py<button class="copy">copy</button></div>
+      <div class="lbl">One-click · presenter</div>
+      <div class="run" style="margin-top:0;">
+        <button class="runbtn" onclick="runStage('demo2', this, 'scr-demo2')">▶ Run Demo 2</button><span class="runpill" data-pill="demo2">idle</span></div>
+      <div class="lbl">Agent · paste the prompt <span style="text-transform:none; letter-spacing:0;">(prompts/02_demo2.md)</span></div>
+      <div class="prompt small">Run Demo 2 (experiments/demo2_selective.py) in the tutorial environment
 (Docker preferred: `docker compose run --rm lab ...`; venv fallback).
 It compares two ways to reach a zero-false-alarm (precision 1.0) alert policy:
 a confidence threshold on a single model vs an agreement threshold on a
@@ -451,7 +523,13 @@ a confidence threshold on a single model vs an agreement threshold on a
 Report: the coverage and TP count for each method, the ratio between them,
 and the verification verdict. One sentence on what this means for a SOC that
 auto-blocks only alerts it can fully trust.<button class="copy">copy</button></div>
-  <div class="note">킥오프 ③. "그동안 selective prediction 개념."</div>
+    </div>
+    <div class="execright">
+      <div class="lbl">Live output <span style="text-transform:none; letter-spacing:0;">(button run · press T to share the agent terminal)</span></div>
+      <pre class="screen" id="scr-demo2">— idle —</pre>
+    </div>
+  </div>
+  <div class="note">Demo 2 실행 페이지. 결과는 다음 체크포인트 표에 자동 반영.</div>
 </section>
 
 <!-- 16 =============================================================== -->
@@ -499,10 +577,8 @@ auto-blocks only alerts it can fully trust.<button class="copy">copy</button></d
             <td class="num ok" data-live="demo2:agreement_tp">—</td></tr>
       </table>
       <div class="verdict">At precision 1.0, agreement detects
-        <b><span data-live="demo2:tp_ratio_agreement_over_confidence">—</span>× more attacks</b>
+        <b><span data-live="demo2:tp_ratio_agreement_over_confidence" data-fmt="f1">—</span>× more attacks</b>
         than confidence.</div>
-      <div class="run"><button class="runbtn" onclick="runStage('demo2', this)">▶ Run Demo 2</button>
-        <span class="runpill" data-pill="demo2">or paste the agent prompt</span></div>
     </div>
     <div><img class="chart" data-liveimg="../results/demo2_selective.png" alt="demo2 chart"></div>
   </div>
@@ -520,16 +596,39 @@ auto-blocks only alerts it can fully trust.<button class="copy">copy</button></d
     <tr><td>Thursday</td><td>web attacks, infiltration <span class="dim">(rare)</span></td><td class="warn">drift eval</td></tr>
     <tr><td>Friday</td><td>botnet, portscan, DDoS <span class="dim">(massive)</span></td><td class="bad">drift eval</td></tr>
   </table>
-  <div class="run">
-    <button class="runbtn" onclick="runStage('download', this, 'out-cic')">▶ 1 Download</button><span class="runpill" data-pill="download"></span>
-    <button class="runbtn" onclick="runStage('prepare', this, 'out-cic')">▶ 2 Preprocess</button><span class="runpill" data-pill="prepare"></span>
-    <button class="runbtn" onclick="runStage('train_cic', this, 'out-cic')">▶ 3 Train</button><span class="runpill" data-pill="train_cic"></span>
-  </div>
-  <pre class="runout" id="out-cic" style="display:none"></pre>
   <div class="sub">2.8M flows · 77 features · same baseline + 40-expert architecture as Lab 1.<br>
     Yes, CIC-IDS2017 has known flaws — that is <i>why</i> it fits a tutorial about
     not trusting your pipeline.</div>
-  <div class="note">"다들 아는 그 데이터셋." 결함 공개가 오히려 주제와 부합. 화수 학습→목금 평가 구조 설명.</div>
+  <div class="note">"다들 아는 그 데이터셋." 결함 공개가 오히려 주제와 부합. 화수 학습→목금 평가 구조 설명. 파이프라인 실행은 다음 페이지.</div>
+</section>
+
+<!-- exec page — Lab 2 pipeline -->
+<section class="slide">
+  <div class="tag"><b>Run it</b> · Lab 2 pipeline</div>
+  <h2 style="margin-bottom:18px;">Dataset → models, live <span class="dim">— download · preprocess · train</span></h2>
+  <div class="execgrid">
+    <div class="execleft">
+      <div class="lbl">Manual</div>
+      <div class="cmd">python scripts/run_pipeline.py --track cic<button class="copy">copy</button></div>
+      <div class="lbl">One-click · presenter</div>
+      <div class="run" style="margin-top:0;">
+        <button class="runbtn" onclick="runStage('download', this, 'scr-cic')">▶ 1 Download</button><span class="runpill" data-pill="download">idle</span></div>
+      <div class="run" style="margin-top:8px;">
+        <button class="runbtn" onclick="runStage('prepare', this, 'scr-cic')">▶ 2 Preprocess (~2 min)</button><span class="runpill" data-pill="prepare"></span></div>
+      <div class="run" style="margin-top:8px;">
+        <button class="runbtn" onclick="runStage('train_cic', this, 'scr-cic')">▶ 3 Train (~5 min)</button><span class="runpill" data-pill="train_cic"></span></div>
+      <div class="lbl">Agent · paste the prompt <span style="text-transform:none; letter-spacing:0;"></span></div>
+      <div class="prompt small">In this repo, run `python scripts/run_pipeline.py --track cic`.
+The first run downloads CIC-IDS2017 (844 MB) from the pinned Kaggle mirror
+and trains the baseline + 40x2 experts (~5 min); later runs skip completed
+stages. Report each stage's outcome and the final verification lines.<button class="copy">copy</button></div>
+    </div>
+    <div class="execright">
+      <div class="lbl">Live output <span style="text-transform:none; letter-spacing:0;">(button run · press T to share the agent terminal)</span></div>
+      <pre class="screen" id="scr-cic">— idle — the presenter cache makes Download instant; stages are idempotent</pre>
+    </div>
+  </div>
+  <div class="note">CIC 파이프라인 실행 페이지. 발표 시 Preprocess/Train은 사전 완료 상태 — 시간 여유에 따라 라이브 재실행 여부 결정.</div>
 </section>
 
 <!-- 19 =============================================================== -->
@@ -540,7 +639,25 @@ auto-blocks only alerts it can fully trust.<button class="copy">copy</button></d
   <div class="sub">Hypothesis: on Friday's unseen attack families, accuracy collapses —
     and <b>neither</b> confidence nor agreement means will flag it.
     Something else has to.</div>
-  <div class="prompt">Run Demo 3 (experiments/demo3_cic_drift.py) in the tutorial environment
+  <div class="panel">Kickoff: hand it to the agent — or run it yourself.<br>
+    <span class="dim">Next page: manual command · one-click button · agent prompt, side by side.</span></div>
+  <div class="note">킥오프 ④ 선언. 실행은 다음 페이지. "그동안 explainability 이야기."</div>
+</section>
+
+<!-- exec page — Demo 3 -->
+<section class="slide">
+  <div class="tag"><b>Run it</b> · Demo 3</div>
+  <h2 style="margin-bottom:18px;">Three ways to run it <span class="dim">— the week goes on</span></h2>
+  <div class="execgrid">
+    <div class="execleft">
+      <div class="lbl">Manual</div>
+      <div class="cmd">docker compose run --rm lab \
+  python experiments/demo3_cic_drift.py<button class="copy">copy</button></div>
+      <div class="lbl">One-click · presenter</div>
+      <div class="run" style="margin-top:0;">
+        <button class="runbtn" onclick="runStage('demo3', this, 'scr-demo3')">▶ Run Demo 3</button><span class="runpill" data-pill="demo3">idle</span></div>
+      <div class="lbl">Agent · paste the prompt <span style="text-transform:none; letter-spacing:0;">(prompts/03_demo3.md)</span></div>
+      <div class="prompt small">Run Demo 3 (experiments/demo3_cic_drift.py) in the tutorial environment
 (Docker preferred: `docker compose run --rm lab ...`; venv fallback).
 It evaluates CIC-IDS2017 models trained only on Tuesday+Wednesday traffic
 against a same-week holdout, Thursday, and Friday (novel attack families),
@@ -550,7 +667,13 @@ Report holdout vs Friday as a small table: accuracy, mean confidence, mean
 agreement, predicted-attack rate, accept rate — and the verification verdict.
 Final sentence: which signals stayed silent through the collapse, and which
 label-free signals actually moved?<button class="copy">copy</button></div>
-  <div class="note">킥오프 ④ (CIC). "그동안 explainability 이야기."</div>
+    </div>
+    <div class="execright">
+      <div class="lbl">Live output <span style="text-transform:none; letter-spacing:0;">(button run · press T to share the agent terminal)</span></div>
+      <pre class="screen" id="scr-demo3">— idle —</pre>
+    </div>
+  </div>
+  <div class="note">Demo 3 실행 페이지. 결과는 다음 체크포인트 표에 자동 반영.</div>
 </section>
 
 <!-- 20 =============================================================== -->
@@ -625,8 +748,6 @@ label-free signals actually moved?<button class="copy">copy</button></div>
       <div class="verdict red"><b><span data-live="demo3_cic:friday_wrong_conf90">—</span> wrong Friday
         verdicts carry confidence ≥ 0.9</b> — and 40 experts stay near-unanimous.
         The means are silent; the <b>rates</b> are what move.</div>
-      <div class="run"><button class="runbtn" onclick="runStage('demo3', this)">▶ Run Demo 3</button>
-        <span class="runpill" data-pill="demo3">or paste the agent prompt</span></div>
     </div>
     <div><img class="chart" data-liveimg="../results/demo3_cic_drift.png" alt="demo3 chart"></div>
   </div>
@@ -911,7 +1032,7 @@ async function runStage(stage, btn, outId) {
 }
 
 // clipboard for prompt boxes
-document.querySelectorAll(".prompt .copy").forEach(btn => {
+document.querySelectorAll(".prompt .copy, .cmd .copy").forEach(btn => {
   btn.onclick = async () => {
     const text = btn.parentElement.textContent.replace(/copy$/, "").trim();
     try { await navigator.clipboard.writeText(text);
@@ -942,6 +1063,7 @@ async function poll() {
     const v = cache[src]?.[key];
     if (v === undefined) return;
     el.textContent = el.dataset.fmt === "pct" ? (100 * v).toFixed(1) + "%"
+                   : el.dataset.fmt === "f1" ? Number(v).toFixed(1)
                    : typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(4)) : v;
     el.classList.add("filled");
   });

@@ -49,12 +49,16 @@ def main():
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        from plotstyle import CAT, apply
+        apply()
         fig, ax = plt.subplots(figsize=(6, 4))
         xs = [s for s, _ in series]
-        for key, label in [("acc", "accuracy"), ("conf", "baseline confidence"),
-                           ("agree", "ensemble agreement")]:
-            ax.plot(xs, [r[key] for _, r in series], marker="o", label=label)
-        ax.set_xlabel("drift intensity (sigma)"); ax.legend(); ax.grid(alpha=0.3)
+        for (key, label), c in zip([("acc", "accuracy"), ("conf", "baseline confidence"),
+                                    ("agree", "ensemble agreement")], CAT):
+            ax.plot(xs, [r[key] for _, r in series], marker="o", label=label, color=c)
+        ax.set_title("Signals vs drift intensity (sigma)")
+        ax.set_ylim(0, 1.05)
+        ax.legend(loc="lower left")
         fig.tight_layout()
         fig.savefig(ROOT / "results" / "demo3_drift.png", dpi=150)
         print("[chart] results/demo3_drift.png")

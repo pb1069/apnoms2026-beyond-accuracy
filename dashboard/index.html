@@ -4,55 +4,104 @@
 <meta charset="utf-8">
 <title>Beyond Accuracy — Live Results</title>
 <style>
-  :root { --bg:#0f1420; --card:#1a2233; --ink:#e8edf6; --dim:#8fa0bb;
-          --ok:#3ecf8e; --bad:#ff6b6b; --accent:#5b9dff; }
+  :root { --bg:#0f1420; --card:#1a2233; --card2:#151d2e; --line:#232e47;
+          --ink:#e8edf6; --dim:#8fa0bb; --ok:#3ecf8e; --bad:#ff6b6b;
+          --accent:#5b9dff; --warn:#ffb454; }
   * { box-sizing:border-box; margin:0; }
-  body { background:var(--bg); color:var(--ink);
-         font:15px/1.55 "Segoe UI", system-ui, sans-serif; padding:32px; }
-  h1 { font-size:26px; font-weight:600; }
+  body { background:var(--bg); color:var(--ink); padding:0 0 40px;
+         font:15px/1.55 "Segoe UI Variable Display","Segoe UI",system-ui,sans-serif; }
+
+  header { border-bottom:1px solid var(--line); padding:26px 40px 22px;
+           display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; }
+  h1 { font-size:24px; font-weight:650; letter-spacing:-.3px; }
   h1 span { color:var(--accent); }
-  .sub { color:var(--dim); margin:6px 0 28px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:20px; }
-  .card { background:var(--card); border-radius:12px; padding:20px 22px; }
-  .card h2 { font-size:17px; margin-bottom:4px; }
+  .sub { color:var(--dim); font-size:13.5px; }
+  #mode { color:var(--warn); font-weight:600; }
+
+  .wrap { padding:28px 40px 0; max-width:1600px; margin:0 auto; }
+
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+           gap:16px; margin-bottom:26px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:12px;
+          padding:16px 20px 14px; }
+  .tile .k { font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase;
+             color:var(--dim); margin-bottom:6px; }
+  .tile .v { font-size:30px; font-weight:650; letter-spacing:-.5px;
+             font-variant-numeric:tabular-nums; }
+  .tile .d { font-size:12.5px; color:var(--dim); margin-top:4px; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(380px,1fr)); gap:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+          padding:0 24px 22px; overflow:hidden; }
+  .card::before { content:""; display:block; height:3px; margin:0 -24px 18px;
+                  background:linear-gradient(90deg,var(--accent),transparent 70%); }
+  .card .kicker { font-size:11.5px; letter-spacing:2px; text-transform:uppercase;
+                  color:var(--accent); font-weight:700; }
+  .card h2 { font-size:17px; font-weight:650; margin:4px 0 2px; letter-spacing:-.2px; }
   .card .q { color:var(--dim); font-size:13px; margin-bottom:12px; }
   .pending { color:var(--dim); font-style:italic; padding:18px 0; }
   table { width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0; }
-  td { padding:4px 6px; border-bottom:1px solid #2a3450; }
+  td { padding:6px 6px; border-bottom:1px solid var(--line); }
+  tr:last-child td { border-bottom:0; }
   td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
-  .verdict { margin-top:10px; padding:10px 12px; border-radius:8px; font-size:13.5px;
+  .verdict { margin-top:10px; padding:11px 14px; border-radius:8px; font-size:13.5px;
              background:#0d2b21; border-left:3px solid var(--ok); }
   .verdict.warn { background:#2f1520; border-left-color:var(--bad); }
-  img { width:100%; border-radius:8px; margin-top:12px; background:#fff; }
+  img { width:100%; border-radius:10px; margin-top:14px;
+        border:1px solid var(--line); background:var(--card); }
   .up { color:var(--bad); font-weight:600; }
   .down { color:var(--ok); font-weight:600; }
-  footer { color:var(--dim); font-size:12.5px; margin-top:28px; }
+  footer { color:var(--dim); font-size:12.5px; margin:28px 40px 0;
+           padding-top:16px; border-top:1px solid var(--line); }
 </style>
 </head>
 <body>
-<h1>Beyond <span>Accuracy</span> — Live Results</h1>
-<div class="sub">APNOMS 2026 Tutorial 1 · Assessing the Reliability of AI Outputs in Security Operations
-· auto-refreshes every 5s<span id="mode" style="color:var(--warn)"></span></div>
+<header>
+  <h1>Beyond <span>Accuracy</span> — Live Results</h1>
+  <div class="sub">APNOMS 2026 Tutorial 1 · Assessing the Reliability of AI Outputs in
+    Security Operations · auto-refreshes every 5s<span id="mode"></span></div>
+</header>
 
-<div class="grid">
-  <div class="card" id="demo1">
-    <h2>Demo 1 · Is confidence trustworthy?</h2>
-    <div class="q">Mean confidence of correct vs wrong predictions</div>
-    <div class="pending">waiting for results/demo1.json …</div>
+<div class="wrap">
+  <div class="tiles">
+    <div class="tile"><div class="k">Confidence separation</div>
+      <div class="v" id="t1">—</div>
+      <div class="d">wrong − correct mean confidence · positive = lies (Lab 1)</div></div>
+    <div class="tile"><div class="k">Detections kept @ precision 1.0</div>
+      <div class="v" id="t2">—</div>
+      <div class="d">agreement vs confidence gating (Lab 1)</div></div>
+    <div class="tile"><div class="k">Friday accuracy collapse</div>
+      <div class="v" id="t3">—</div>
+      <div class="d">while confidence &amp; agreement means stay flat (CIC-IDS2017)</div></div>
+    <div class="tile"><div class="k">Confidently-wrong verdicts</div>
+      <div class="v" id="t4">—</div>
+      <div class="d">Friday errors carrying confidence ≥ 0.9 (CIC-IDS2017)</div></div>
   </div>
-  <div class="card" id="demo2">
-    <h2>Demo 2 · Selective prediction @ Precision 1.0</h2>
-    <div class="q">How many attacks survive a zero-false-alarm policy?</div>
-    <div class="pending">waiting for results/demo2.json …</div>
-  </div>
-  <div class="card" id="demo3">
-    <h2>Demo 3 · Real-world drift (CIC-IDS2017)</h2>
-    <div class="q">Models trained on Tue+Wed meet Friday's new attacks</div>
-    <div class="pending">waiting for results/demo3_cic.json …</div>
+
+  <div class="grid">
+    <div class="card" id="demo1">
+      <span class="kicker">Demo 1 · Lab 1 synthetic</span>
+      <h2>Is confidence trustworthy?</h2>
+      <div class="q">Mean confidence of correct vs wrong predictions</div>
+      <div class="pending">waiting for results/demo1.json …</div>
+    </div>
+    <div class="card" id="demo2">
+      <span class="kicker">Demo 2 · Lab 1 synthetic</span>
+      <h2>Selective prediction @ Precision 1.0</h2>
+      <div class="q">How many attacks survive a zero-false-alarm policy?</div>
+      <div class="pending">waiting for results/demo2.json …</div>
+    </div>
+    <div class="card" id="demo3">
+      <span class="kicker">Demo 3 · Lab 2 CIC-IDS2017</span>
+      <h2>Real-world drift</h2>
+      <div class="q">Models trained on Tue+Wed meet Friday's new attacks</div>
+      <div class="pending">waiting for results/demo3_cic.json …</div>
+    </div>
   </div>
 </div>
 
-<footer>All numbers verified against pinned expected_outputs (±0.005). Artifact: docker compose + frozen spec.</footer>
+<footer>All numbers verified against the pinned reference (±0.005) ·
+Artifact: github.com/pb1069/apnoms2026-beyond-accuracy · pinned specs + Docker + frozen prompts</footer>
 
 <script>
 const f = (x, d=4) => typeof x === "number" ? x.toFixed(d) : x;
@@ -71,11 +120,14 @@ async function grab(name) {
 function rows(pairs) {
   return "<table>" + pairs.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("") + "</table>";
 }
+const IMG = p => `<img onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=this.src.replace('/results/','/expected_outputs/charts/')}" src="${p}" alt="">`;
 
 async function render() {
   const d1 = await grab("demo1");
-  if (d1) document.getElementById("demo1").innerHTML = `
-    <h2>Demo 1 · Is confidence trustworthy?</h2>
+  if (d1) {
+    document.getElementById("demo1").innerHTML = `
+    <span class="kicker">Demo 1 · Lab 1 synthetic</span>
+    <h2>Is confidence trustworthy?</h2>
     <div class="q">Mean confidence of correct vs wrong predictions</div>
     ${rows([["baseline accuracy", f(d1.baseline_acc)],
             ["confidence — correct", f(d1.conf_correct_mean)],
@@ -84,22 +136,30 @@ async function render() {
             ["agreement — wrong", `<span class="down">${f(d1.agree_wrong_mean)} ▼</span>`]])}
     <div class="verdict warn">The model is <b>more confident when it is wrong</b>
       (${d1.conf_separation > 0 ? "+" : ""}${f(d1.conf_separation)}). Agreement separates correctly.</div>
-    <img onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=this.src.replace('/results/','/expected_outputs/charts/')}" src="../results/demo1_confidence.png" alt="">`;
+    ${IMG("../results/demo1_confidence.png")}`;
+    document.getElementById("t1").textContent = (d1.conf_separation > 0 ? "+" : "") + f(d1.conf_separation);
+  }
 
   const d2 = await grab("demo2");
-  if (d2) document.getElementById("demo2").innerHTML = `
-    <h2>Demo 2 · Selective prediction @ Precision 1.0</h2>
+  if (d2) {
+    document.getElementById("demo2").innerHTML = `
+    <span class="kicker">Demo 2 · Lab 1 synthetic</span>
+    <h2>Selective prediction @ Precision 1.0</h2>
     <div class="q">How many attacks survive a zero-false-alarm policy?</div>
     ${rows([["attacks in test set", d2.n_attack],
             ["confidence — coverage / TP", `${pct(d2.confidence_coverage)} / ${d2.confidence_tp}`],
             ["agreement — coverage / TP", `<b>${pct(d2.agreement_coverage)} / ${d2.agreement_tp}</b>`]])}
     <div class="verdict">At precision 1.0, agreement detects
       <b>${f(d2.tp_ratio_agreement_over_confidence, 1)}× more attacks</b> than confidence.</div>
-    <img onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=this.src.replace('/results/','/expected_outputs/charts/')}" src="../results/demo2_selective.png" alt="">`;
+    ${IMG("../results/demo2_selective.png")}`;
+    document.getElementById("t2").textContent = f(d2.tp_ratio_agreement_over_confidence, 1) + "×";
+  }
 
   const d3 = await grab("demo3_cic");
-  if (d3) document.getElementById("demo3").innerHTML = `
-    <h2>Demo 3 · Real-world drift (CIC-IDS2017)</h2>
+  if (d3) {
+    document.getElementById("demo3").innerHTML = `
+    <span class="kicker">Demo 3 · Lab 2 CIC-IDS2017</span>
+    <h2>Real-world drift</h2>
     <div class="q">Models trained on Tue+Wed meet Friday's new attacks</div>
     ${rows([["accuracy — holdout → friday", `${f(d3.holdout_acc)} → <span class="up">${f(d3.friday_acc)}</span>`],
             ["confidence (mean)", `${f(d3.holdout_conf)} → ${f(d3.friday_conf)} <span class="up">silent</span>`],
@@ -108,7 +168,11 @@ async function render() {
             ["accept rate @ thr", `<span class="down">${pct(d3.holdout_accept_rate)} → ${pct(d3.friday_accept_rate)} ▼ moves</span>`]])}
     <div class="verdict warn"><b>${d3.friday_wrong_conf90} wrong Friday verdicts carry confidence ≥ 0.9.</b>
       Per-sample means stay silent through the collapse — the label-free <b>rate signals</b> are what move.</div>
-    <img onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=this.src.replace('/results/','/expected_outputs/charts/')}" src="../results/demo3_cic_drift.png" alt="">`;
+    ${IMG("../results/demo3_cic_drift.png")}`;
+    document.getElementById("t3").textContent = `${f(d3.holdout_acc, 2)} → ${f(d3.friday_acc, 2)}`;
+    document.getElementById("t4").textContent = d3.friday_wrong_conf90;
+  }
+
   const m = document.getElementById("mode");
   if (m) m.textContent = pinnedUsed ? " · 📌 pinned reference (audit view)" : "";
 }

@@ -46,12 +46,16 @@ def main():
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        from plotstyle import CAT, apply
+        apply()
         fig, axes = plt.subplots(1, 2, figsize=(10, 4))
         for ax, sig, ok, title in [(axes[0], conf, correct, "Baseline confidence"),
                                    (axes[1], agree, ens_correct, "Ensemble agreement")]:
-            ax.hist(sig[ok], bins=30, alpha=0.6, label="correct", density=True)
-            ax.hist(sig[~ok], bins=30, alpha=0.6, label="wrong", density=True)
-            ax.set_title(title); ax.legend()
+            ax.hist(sig[ok], bins=30, color=CAT[0], alpha=0.85, label="correct", density=True)
+            ax.hist(sig[~ok], bins=30, color=CAT[1], alpha=0.75, label="wrong", density=True)
+            ax.set_title(title)
+            ax.set_yticks([])
+            ax.legend(loc="upper left")
         fig.tight_layout()
         fig.savefig(ROOT / "results" / "demo1_confidence.png", dpi=150)
         print("[chart] results/demo1_confidence.png")

@@ -84,15 +84,21 @@ def main():
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        from plotstyle import CAT, apply
+        apply()
         fig, axes = plt.subplots(1, 2, figsize=(11, 4))
         xs = [t for t, _, _ in SLICES]
-        for key, label in [("acc", "accuracy"), ("conf", "confidence"), ("agree", "agreement")]:
-            axes[0].plot(xs, [rows[t][key] for t in xs], marker="o", label=label)
-        axes[0].set_title("per-sample means"); axes[0].legend(); axes[0].grid(alpha=0.3)
-        for key, label in [("pred_attack_rate", "predicted-attack rate"),
-                           ("accept_rate", "accept rate")]:
-            axes[1].plot(xs, [rows[t][key] for t in xs], marker="s", label=label)
-        axes[1].set_title("rate signals (label-free)"); axes[1].legend(); axes[1].grid(alpha=0.3)
+        for (key, label), c in zip([("acc", "accuracy"), ("conf", "confidence"),
+                                    ("agree", "agreement")], CAT):
+            axes[0].plot(xs, [rows[t][key] for t in xs], marker="o", label=label, color=c)
+        axes[0].set_title("Per-sample means (silent)")
+        axes[0].set_ylim(0, 1.05)
+        axes[0].legend(loc="lower left")
+        for (key, label), c in zip([("pred_attack_rate", "predicted-attack rate"),
+                                    ("accept_rate", "accept rate")], CAT):
+            axes[1].plot(xs, [rows[t][key] for t in xs], marker="s", label=label, color=c)
+        axes[1].set_title("Rate signals (they move)")
+        axes[1].legend(loc="upper right")
         fig.tight_layout()
         fig.savefig(ROOT / "results" / "demo3_cic_drift.png", dpi=150)
         print("[chart] results/demo3_cic_drift.png")

@@ -57,12 +57,17 @@ def main():
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        from plotstyle import CAT, INK, apply
+        apply()
         fig, ax = plt.subplots(figsize=(6, 4))
         names = [n for n, r in rows.items() if r]
-        ax.bar(names, [rows[n]["tp"] for n in names], color=["#c44", "#286"])
-        ax.set_ylabel("attacks detected at precision 1.0")
+        ax.bar(names, [rows[n]["tp"] for n in names], color=CAT[:len(names)], width=0.55)
+        ax.set_title("Attacks detected at precision 1.0")
+        ax.grid(axis="x", visible=False)
         for i, n in enumerate(names):
-            ax.text(i, rows[n]["tp"], str(rows[n]["tp"]), ha="center", va="bottom")
+            ax.text(i, rows[n]["tp"] + 18, f"{rows[n]['tp']:,}", ha="center",
+                    va="bottom", color=INK, fontweight="bold")
+        ax.margins(y=0.12)
         fig.tight_layout()
         fig.savefig(ROOT / "results" / "demo2_selective.png", dpi=150)
         print("[chart] results/demo2_selective.png")

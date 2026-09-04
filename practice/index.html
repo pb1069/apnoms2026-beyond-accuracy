@@ -1,0 +1,306 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beyond Accuracy Trainer</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  :root { --bg:#0F1420; --card:#1A2233; --line:#232E47; --ink:#E8EDF6; --dim:#8FA0BB;
+          --accent:#5B9DFF; --warn:#FFB454; --ok:#3ECF8E; --bad:#FF6B6B; }
+  * { box-sizing:border-box; margin:0; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body { background:var(--bg); color:var(--ink); overflow:hidden;
+         font:15px/1.55 Archivo, "Segoe UI", system-ui, sans-serif; }
+  #app { height:100%; display:flex; flex-direction:column; }
+
+  /* ---------- top bar ---------- */
+  #top { display:flex; align-items:center; gap:10px; padding:8px 14px;
+         border-bottom:1px solid var(--line); flex:0 0 auto; }
+  #pos { font-weight:700; font-size:15px; letter-spacing:.3px; white-space:nowrap; }
+  #pos span { color:var(--dim); font-weight:500; }
+  #modes { display:flex; gap:6px; margin-left:auto; }
+  .mbtn { background:none; border:1px solid var(--line); color:var(--dim); border-radius:999px;
+          padding:4px 12px; font:600 12.5px Archivo, sans-serif; cursor:pointer; }
+  .mbtn.on { background:var(--accent); border-color:var(--accent); color:#08101F; }
+  #timerbox { display:flex; align-items:center; gap:8px; font-variant-numeric:tabular-nums; }
+  #clock { font-weight:700; font-size:15px; }
+  #pace { font-size:12.5px; font-weight:700; border-radius:999px; padding:3px 10px;
+          background:var(--card); color:var(--dim); }
+  #pace.ahead { color:var(--ok); } #pace.behind { color:var(--bad); }
+  #tbtn { background:var(--card); border:1px solid var(--line); color:var(--ink);
+          border-radius:8px; padding:4px 12px; font:600 12.5px Archivo; cursor:pointer; }
+
+  /* ---------- main split ---------- */
+  #main { flex:1; display:flex; min-height:0; }
+  #slidepane { flex:0 0 42%; border-right:1px solid var(--line); padding:16px 18px;
+               display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+  .kicker { font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:var(--dim);
+            border-left:3px solid var(--accent); padding-left:9px; }
+  #stitle { font-size:22px; font-weight:700; letter-spacing:-.3px; line-height:1.25;
+            text-wrap:balance; }
+  #skr { color:var(--accent); font-size:12.5px; font-weight:600; }
+  #slines { display:flex; flex-direction:column; gap:6px; }
+  #slines div { background:var(--card); border:1px solid var(--line); border-radius:8px;
+                padding:7px 10px; font-size:12.5px; color:var(--dim); line-height:1.45; }
+  #meta { margin-top:auto; display:flex; gap:8px; align-items:center; padding-top:8px; }
+  .chip { background:var(--card); border:1px solid var(--line); border-radius:999px;
+          padding:3px 11px; font-size:12px; font-weight:600; color:var(--dim);
+          font-variant-numeric:tabular-nums; }
+  .chip b { color:var(--ink); }
+
+  #scriptpane { flex:1; position:relative; min-width:0; }
+  #scriptscroll { height:100%; overflow-y:auto; padding:18px 22px 90px; }
+  .act { background:none; border:0; border-left:3px solid var(--line);
+         padding:2px 12px; margin:0 0 12px; font-size:12px;
+         color:var(--dim); opacity:.85; }
+  :root { --fs:19px; }
+  .para { font:400 var(--fs)/1.8 "Source Serif 4", Georgia, serif; margin:0 0 18px;
+          max-width:34em; color:#F2F5FB; }
+  .para b { font-weight:600; }
+  .cue { color:var(--dim); font-style:italic; font-size:.85em; }
+  .bridge { border:1px solid var(--warn); border-radius:10px; padding:12px 16px;
+            margin-top:6px; max-width:34em; }
+  .bridge .blab { font-size:10.5px; letter-spacing:2px; color:var(--warn);
+                  text-transform:uppercase; font-weight:700; margin-bottom:4px; }
+  .bridge .btxt { font:600 calc(var(--fs) - 1px)/1.55 "Source Serif 4", Georgia, serif; color:var(--warn); }
+
+  /* recall (blur) mode */
+  #scriptpane.blur #scriptscroll { filter:blur(7px); }
+  #veil { position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+          font:600 14px Archivo; color:var(--dim); letter-spacing:1px; }
+  #scriptpane.blur #veil { display:flex; }
+
+  /* focus mode: collapse slide pane, script full-bleed */
+  body.focus #slidepane { display:none; }
+  body.focus #scriptscroll { padding-left:6vw; padding-right:6vw; }
+  body.focus .para, body.focus .bridge { max-width:40em; }
+  #focustitle { display:none; color:var(--dim); font-size:12.5px; white-space:nowrap;
+                overflow:hidden; text-overflow:ellipsis; max-width:28vw; }
+  body.focus #focustitle { display:block; }
+  /* nav edges */
+  .edge { position:fixed; top:52px; bottom:64px; width:14%; z-index:4; opacity:0; }
+  #edgeL { left:0; } #edgeR { right:0; }
+
+  /* ---------- bottom bar ---------- */
+  #bottom { flex:0 0 auto; border-top:1px solid var(--line); padding:8px 14px 10px;
+            display:flex; align-items:center; gap:12px; }
+  .nav { background:var(--card); border:1px solid var(--line); color:var(--ink);
+         border-radius:10px; width:52px; height:36px; font-size:18px; cursor:pointer; }
+  #bar { flex:1; height:5px; background:var(--card); border-radius:3px; overflow:hidden; }
+  #fill { height:100%; width:0; background:var(--accent); border-radius:3px; }
+  #target { font-size:12.5px; color:var(--dim); font-variant-numeric:tabular-nums;
+            white-space:nowrap; }
+
+  /* ---------- bridge-card mode ---------- */
+  #cardmode { position:fixed; inset:0; background:var(--bg); display:none;
+              flex-direction:column; align-items:center; justify-content:center;
+              gap:22px; padding:24px; z-index:9; }
+  #cardmode.on { display:flex; }
+  #bcard { background:var(--card); border:1px solid var(--line); border-radius:16px;
+           width:min(560px, 92vw); min-height:240px; padding:26px 30px; display:flex;
+           flex-direction:column; gap:14px; justify-content:center; cursor:pointer; }
+  #bfront { font:600 19px/1.4 Archivo; letter-spacing:-.2px; }
+  #bfront small { display:block; color:var(--dim); font-size:12px; letter-spacing:2px;
+                  text-transform:uppercase; margin-bottom:8px; }
+  #bback { font:600 17px/1.55 "Source Serif 4", Georgia, serif; color:var(--warn);
+           display:none; }
+  #bcard.show #bback { display:block; }
+  #bhint { color:var(--dim); font-size:12.5px; }
+  #cardnav { display:flex; gap:12px; align-items:center; }
+  #cardnav .mbtn { font-size:14px; padding:8px 18px; }
+
+  /* ---------- portrait ---------- */
+  @media (orientation: portrait) {
+    #main { flex-direction:column; }
+    #slidepane { flex:0 0 auto; border-right:0; border-bottom:1px solid var(--line);
+                 max-height:34vh; }
+    #meta { margin-top:0; }
+    #rotate { display:block; }
+  }
+  #rotate { display:none; text-align:center; color:var(--dim); font-size:11.5px;
+            padding:2px 0 0; }
+</style>
+
+<div id="app">
+  <div id="top">
+    <div id="pos">1<span>/42</span></div>
+    <div id="timerbox">
+      <button id="tbtn">▶</button><div id="clock">00:00</div><div id="pace">—</div>
+    </div>
+    <div id="focustitle"></div>
+    <div id="modes">
+      <button class="mbtn" id="fminus">A−</button>
+      <button class="mbtn" id="fplus">A+</button>
+      <button class="mbtn" id="focusbtn">집중</button>
+      <button class="mbtn on" data-m="read">읽기</button>
+      <button class="mbtn" data-m="recall">암기</button>
+      <button class="mbtn" data-m="bridge">브리지</button>
+    </div>
+  </div>
+  <div id="main">
+    <div id="slidepane">
+      <div class="kicker" id="stag"></div>
+      <div id="stitle"></div>
+      <div id="skr"></div>
+      <div id="slines"></div>
+      <div id="meta">
+        <span class="chip">시작 <b id="mt"></b></span>
+        <span class="chip">목표 <b id="md"></b></span>
+      </div>
+      <div id="rotate">가로모드에서 좌/우 분할로 보입니다</div>
+    </div>
+    <div id="scriptpane">
+      <div id="scriptscroll"></div>
+      <div id="veil">탭하여 대본 확인</div>
+    </div>
+  </div>
+  <div id="bottom">
+    <button class="nav" id="prev">‹</button>
+    <div id="bar"><div id="fill"></div></div>
+    <div id="target">이 장 <span id="el">0:00</span> / <span id="tg"></span></div>
+    <button class="nav" id="next">›</button>
+  </div>
+</div>
+
+<div class="edge" id="edgeL"></div><div class="edge" id="edgeR"></div>
+
+<div id="cardmode">
+  <div id="bcard"><div id="bfront"></div><div id="bback"></div>
+    <div id="bhint">탭하면 브리지 문장 공개</div></div>
+  <div id="cardnav">
+    <button class="mbtn" id="cprev">‹ 이전</button>
+    <button class="mbtn" id="cshuf">섞기</button>
+    <button class="mbtn" id="cnext">다음 ›</button>
+    <button class="mbtn" id="cexit">닫기</button>
+  </div>
+</div>
+
+<script>
+const D = [{"n": 1, "kr": "Title", "t": "09:00", "dur": 30, "acts": ["마이크 체크 후 정면. 터미널·서버·대시보드 사전 기동 확인 완료 상태."], "paras": ["Good morning, everyone. Welcome to the first tutorial of APNOMS 2026. My name is Ui-Jun Baek. I am a senior researcher at KISTI, the Korea Institute of Science and Technology Information, where I work on AI-based network intrusion detection — and on the question of when we can actually trust what those AI systems tell us. That question is our topic for the next eighty minutes."], "bridge": "And I want to begin with a single number.", "tag": "APNOMS 2026 · Tutorial 1 · Sep 9, 09:00–10:20 · Civic Hall A", "title": "", "lines": ["Beyond Accuracy", "Assessing the Reliability of AI Outputs in Security Operations", "Ui-Jun Baek, Ph.D. · Senior Researcher", "Science and Technology Security Research Center, KISTI"]}, {"n": 2, "kr": "Hook", "t": "09:01", "dur": 90, "acts": ["표를 가리키고 2초 침묵 후 시작. 마지막 질문 후 3초 침묵."], "paras": ["<em class=\"cue\">(2초 침묵)</em> This is a network intrusion detector. On this test traffic, it is about sixty-nine percent accurate. Look at its confidence. On the answers it got right — zero point nine four five seven. On the answers it got wrong — zero point nine six three five. <em class=\"cue\">(pause)</em> This model is more confident when it is wrong. Its most confident answers are its mistakes.", "So here is my question for you. Would you auto-block traffic based on this model&#x27;s confidence? <em class=\"cue\">(pause — 청중 훑기)</em>", "Keep that number in mind — zero nine six three five. In about twenty-five minutes, we will reproduce it live, in this room. Not from my slides. From the code."], "bridge": "So — here is the plan for our eighty minutes.", "tag": "Hook", "title": "This model is more confident when it is wrong", "lines": ["Prediction group Mean confidence", "Correct predictions 0.9457", "Wrong predictions 0.9635 ▲", "A network intrusion detector, 69% accurate against evasive traffic —"]}, {"n": 3, "kr": "Roadmap", "t": "09:02", "dur": 90, "acts": [], "paras": ["Three parts. First, concepts: why accuracy-centered evaluation fails in operations. Second, live demos — in two labs. A small synthetic lab, where we control the failure mechanism completely. And then CIC-IDS2017 — the dataset everyone in this room has probably touched at least once.", "Everything you see today, you can run yourself — three ways. Path A: paste our prompts into an LLM agent, like Claude Code or Codex. Path B: manual commands, with Docker or plain Python. Path C: one-click buttons — inside these very slides. Every &quot;Run it&quot; page shows all three, side by side.", "And one more thing about how we work today: we pipeline. I will kick off each experiment *before* I explain the concept it proves. By the time you understand why the result matters, the result will already be waiting for us.", "pipeline&quot; starts meaning something right now.”"], "bridge": "And", "tag": "Roadmap", "title": "How this tutorial runs", "lines": ["Concepts — why accuracy-centered evaluation fails in operations", "Live demos in two labs — a controlled synthetic lab (mechanism),", "then CIC-IDS2017 (reality)", "Operational guidance — accept / review / withhold"]}, {"n": 4, "kr": "Kickoff ①", "t": "09:03", "dur": 30, "acts": ["배지 가리키기. 다음 장으로 빠르게."], "paras": ["An agent is about to build and verify our entire lab — while we talk."], "bridge": "Next page.", "tag": "Kickoff ① · 09:03", "title": "Setup — an agent builds the lab while we talk", "lines": ["AGENT KICKOFF", "An agent is about to build and verify the whole lab — while we talk.", "Next page: run setup your way — manual, one-click, or agent prompt.", "Repo: github.com/pb1069/apnoms2026-beyond-accuracy · prompts/00_setup.md"]}, {"n": 5, "kr": "Run it — Setup", "t": "09:03", "dur": 120, "acts": ["Shift+T → 터미널 오버레이 확대 → 프롬프트 copy → 터미널 붙여넣기 → 엔터 → 잠시 보여주고 → t로 축소(구석 유지)."], "paras": ["This is a &quot;Run it&quot; page. You will see five of these today. On the left: the same task, three ways. A manual command. A one-click button. And an agent prompt. Pick whichever you trust — they all end at the same verified numbers.", "I will use the agent. <em class=\"cue\">(프롬프트 붙여넣기)</em> I am pasting the setup prompt into Claude Code — and that&#x27;s it. The agent will build the Docker environment, verify the shipped data and models against pinned checksums, and start our results dashboard. You can watch it working in this corner. <em class=\"cue\">(t로 축소)</em>"], "bridge": "While the agent builds our lab, let’s talk about why we are here.", "tag": "Run it · Setup", "title": "Three ways to run it — setup & verify", "lines": ["Manual", "docker compose build", "docker compose run --rm lab python scripts/smoke_test.py copy", "One-click · presenter"]}, {"n": 6, "kr": "Part 1: 성과", "t": "09:05", "dur": 150, "acts": [], "paras": ["Let me state the good news first. Detection accuracy is, frankly, a solved-looking problem. On the public benchmarks, binary detection — benign versus attack — sits at ninety-nine percent plus. Multi-class attack classification runs from the high seventies to the high nineties. These numbers have been good for years.", "So the question in operations is no longer &quot;can the model detect?&quot; The question is: &quot;can the analyst act on this output?&quot; Because every alert triggers work — triage, investigation, sometimes blocking real traffic. And acting on a wrong but confident output usually costs more than a miss."], "bridge": "So let’s name the traps — there are three.", "tag": "Part 1 · The traps", "title": "Detection accuracy is a solved-looking problem", "lines": ["Task (public IDS benchmarks) Typical accuracy", "Binary detection (benign vs attack) 0.99+", "Multi-class attack classification 0.77 – 0.97", "The question in operations is no longer"]}, {"n": 7, "kr": "Trap 1: Overconfidence", "t": "09:07", "dur": 150, "acts": [], "paras": ["Trap number one: overconfidence. The softmax probability your model outputs is not the probability of being correct. It is a trained artifact. When your training data is cleanly separable — and benchmark data usually is — cross-entropy pushes every output toward zero point nine nine.", "And here is the dangerous part: calibration breaks silently. No error message. No exception. A model can be ninety-nine percent &quot;confident&quot; on an input unlike anything it was trained on — because confidence measures distance from a learned boundary. It does not measure truth."], "bridge": "That was the first trap. The second one is sneakier.", "tag": "Part 1 · Trap 1/3", "title": "Overconfidence — wrong ≠ uncertain", "lines": ["Softmax probability is not P(correct) — it is a trained artifact", "Cleanly separable training data ⇒ cross-entropy drives outputs to 0.99+", "Calibration breaks silently : no error message, no exception", "A model can be 99% \"confident\" on inputs unlike anything it was trained on."]}, {"n": 8, "kr": "Trap 2: Shortcut learning", "t": "09:09", "dur": 150, "acts": [], "paras": ["Trap number two: shortcut learning. Models latch onto the easiest separating feature — not the true cause. In traffic data, that might be a TLS fingerprint, a port pattern, or an artifact of how the dataset was captured. The shortcut holds perfectly inside the dataset. And then it inverts in the wild — through evasion, or simply through benign traffic that happens to look alike.", "In our synthetic lab, we planted a shortcut by design. So today, you will see exactly what happens when reality breaks it — and because we planted it, we can explain every single number you are about to see."], "bridge": "And the third trap is the one that ties them all together.", "tag": "Part 1 · Trap 2/3", "title": "Shortcut learning — the fingerprint trap", "lines": ["Models latch onto the easiest separating feature , not the true cause", "In traffic data: TLS fingerprints, port patterns, capture-time artifacts", "The shortcut holds in the dataset — and inverts in the wild (evasion, benign look-alikes)", "Our lab dataset has a shortcut planted by design —"]}, {"n": 9, "kr": "Trap 3: Distribution shift", "t": "09:11", "dur": 150, "acts": [], "paras": ["Trap number three: distribution shift — and the label problem. Traffic drifts. New applications, new libraries, new attack tooling. But accuracy in production is invisible, because nobody labels live traffic. Think about what that means: the one metric you optimized is the one metric you cannot watch.", "So here is the requirement for everything that follows. <em class=\"cue\">(강조, 천천히)</em> Accuracy is not reliability. Operations need signals that are computable without labels — and that fail loudly when the model fails."], "bridge": "Before we go deeper — let’s check on our agent.", "tag": "Part 1 · Trap 3/3", "title": "Distribution shift — and the label problem", "lines": ["Traffic drifts: new apps, new libraries, new attack tooling", "Accuracy in production is invisible — nobody labels live traffic", "So the one metric you optimized is the one metric you cannot watch", "Accuracy ≠ Reliability."]}, {"n": 10, "kr": "Checkpoint ①", "t": "09:15", "dur": 60, "acts": ["표가 자동으로 채워져 있는지 확인. 에이전트 보고도 한 줄 낭독 가능. 미완이면: &quot;The agent is still finishing — we&#x27;ll check back in one slide.&quot;"], "paras": ["<em class=\"cue\">(표 가리키며)</em> The lab is up. Python three thirteen, the exact pinned library versions, setup in under a minute — and the dataset content hash matches the pinned reference. That last line matters: the environment, the data, and every model spec are pinned. The numbers you are about to see in this room are the numbers you will get at home."], "bridge": "So what exactly did it just build? Meet Lab one.", "tag": "Checkpoint ① · 09:15", "title": "Is the lab ready?", "lines": ["LIVE", "Setup report Value", "Python (container) —", "numpy / scikit-learn — / —"]}, {"n": 11, "kr": "Lab 1: 데이터셋", "t": "09:16", "dur": 120, "acts": [], "paras": ["So what is in this lab? Six thousand training flows, four thousand test flows, thirty features. Six of those features are true attack indicators — benign traffic sits near zero, attacks shift upward. That is the real evidence.", "And one feature is a planted shortcut: almost perfectly correlated with the label — in training. Then, thirty percent of the test set is evasive: the shortcut is inverted and exaggerated, while the true indicators are suppressed. That is what a capable adversary does — hide the real signal, spoof the superficial one.", "Synthetic on purpose. We control the failure mechanism, so every number that follows can be explained — not just observed."], "bridge": "That is the data. Now, the two detectors we will pit against each other.", "tag": "Lab 1 · synthetic · 1/2", "title": "Meet the dataset (you take it home)", "lines": ["Ingredient Design", "Traffic flows 6,000 train / 4,000 test · 30 features · 3 modality groups", "True evidence 6 attack-indicator channels (benign ≈ 0, attacks shift up)", "Planted shortcut 1 feature, near-perfectly correlated with the label — in training"]}, {"n": 12, "kr": "Lab 1: 모델", "t": "09:18", "dur": 90, "acts": [], "paras": ["Two detectors, one dataset. The baseline: a single MLP that sees all thirty features, heavily regularized so its confidence genuinely tracks signal strength. This is a *best-case* single model — I am not attacking a strawman today.", "Against it: an ensemble of forty small experts, twelve features each, with one diversity constraint — only ten of the forty are allowed to see the shortcut. Every seed and hyperparameter is pinned. Docker and native runs reproduce to four decimal places."], "bridge": "Lab ready. Four concepts to arm ourselves with — starting with the one everyone assumes they understand.", "tag": "Lab 1 · synthetic · 2/2", "title": "Two detectors, one dataset", "lines": ["Baseline One MLP, sees all 30 features.", "Heavily regularized, so its confidence genuinely tracks signal strength —", "a best-case single model.", "Ensemble 40 small experts, 12 features each."]}, {"n": 13, "kr": "Concept 1: Calibration", "t": "09:20", "dur": 120, "acts": [], "paras": ["First concept: confidence and calibration. A model is calibrated when, among all outputs with confidence zero point nine, about ninety percent are actually correct. We measure this with ECE and reliability diagrams — but notice: only on labeled data. And the consistent finding across deep learning is systematic miscalibration toward overconfidence.", "One more subtlety: even a perfectly calibrated model only tells you the *average* risk. It cannot flag *which* prediction is the wrong one."], "bridge": "Let me show you what that looks like as a picture.", "tag": "Part 2 · Concept 1/4", "title": "Confidence & calibration", "lines": ["Calibrated : among outputs with confidence 0.9, ~90% are correct", "Measured by ECE / reliability diagrams — on labeled data", "Deep nets are systematically miscalibrated toward overconfidence", "Even a perfectly calibrated model only tells you the average risk —"]}, {"n": 14, "kr": "Reliability diagram", "t": "09:22", "dur": 120, "acts": ["SVG의 빨간 곡선 가리키기."], "paras": ["This is what miscalibration looks like. The dashed line is a calibrated model — stated confidence equals actual accuracy. The red curve is reality. And the gap between them has two nasty properties. It is invisible at run time — you need labels to draw this picture. And it is widest exactly where you trust the model most: the high-confidence zone. Demo 1 puts real numbers on this curve."], "bridge": "Which brings us to the direct question.", "tag": "Part 2 · Concept 1/4", "title": "What miscalibration looks like", "lines": ["[도해]", "The red gap is invisible at run time", "It is widest exactly where you trust most: the high-confidence zone", "Demo 1 puts real numbers on this curve"]}, {"n": 15, "kr": "Kickoff ②", "t": "09:23", "dur": 60, "acts": [], "paras": ["Is confidence an error signal at all? Here is the hypothesis for Demo 1 — on traffic with evasive samples, the mean confidence of *wrong* predictions will be at least as high as the mean confidence of correct ones. If that sounds impossible, good."], "bridge": "Next page — let’s start it.", "tag": "Part 2 · Concept 1/4 → Kickoff ②", "title": "So… is confidence an error signal at all?", "lines": ["Hypothesis for Demo 1: on traffic with evasive samples,", "mean confidence of wrong predictions ≥ mean confidence of correct ones.", "AGENT KICKOFF", "Kickoff: hand it to the agent — or run it yourself."]}, {"n": 16, "kr": "Run it — Demo 1", "t": "09:24", "dur": 60, "acts": ["원클릭 버튼 클릭(권장: 여기선 Path C 시연) 또는 에이전트. 오른쪽 화면에 출력 흐르는 것 보여주기."], "paras": ["Same page layout — three ways to run it. This time, let me just press the button. <em class=\"cue\">(클릭)</em> Demo one is running: the baseline and the forty experts, evaluated on the evasive test set, and — this is the important part — self-verified against the pinned reference at plus or minus zero point zero zero five."], "bridge": "While it runs — two more ideas.", "tag": "Run it · Demo 1", "title": "Three ways to run it — pick yours", "lines": ["Manual · Docker", "docker compose run --rm lab python experiments/demo1_confidence.py copy", "One-click · presenter", "▶ Run Demo 1"]}, {"n": 17, "kr": "Concept 2: Uncertainty", "t": "09:25", "dur": 120, "acts": [], "paras": ["When a model says &quot;I don&#x27;t know,&quot; there are two different kinds of not-knowing. Aleatoric uncertainty is noise in the world — two flows with identical features but different labels. No model fixes that. Epistemic uncertainty is the model&#x27;s own ignorance — inputs unlike anything in training. That one is reducible, *if* you can detect it.", "Drift and evasion live in the epistemic box. And a single model&#x27;s softmax cannot see its own ignorance — by construction."], "bridge": "So if one model cannot see its own ignorance — ask several.", "tag": "Part 2 · Concept 2/4", "title": "Uncertainty — what kind of \"don't know\"?", "lines": ["Aleatoric Noise in the world.", "Two flows, identical features, different labels. Irreducible.", "Epistemic Model ignorance.", "Inputs unlike training data. Reducible — if you can detect it."]}, {"n": 18, "kr": "Agreement", "t": "09:27", "dur": 120, "acts": [], "paras": ["So here is the practical proxy: ensemble agreement. Train several experts on *different evidence* — different feature subsets, different modalities. Agreement is simply the fraction of experts backing the majority decision. On familiar inputs, experts converge. On unfamiliar inputs, they scatter — because each one is ignorant in a different way.", "This is also the design idea behind verification-aware IDS research — systems that emit agreement, evidence, and diversity telemetry as first-class outputs. Signals you can compute without a single label."], "bridge": "And agreement is just one row in a bigger menu.", "tag": "Part 2 · Concept 2/4", "title": "A practical proxy: ensemble agreement", "lines": ["Train K experts on different evidence (feature subsets, modalities)", "Agreement = fraction of experts backing the majority decision", "Familiar inputs → experts converge · unfamiliar inputs → experts scatter", "Case in point: verification-aware IDS designs (e.g. VALIDS) emit"]}, {"n": 19, "kr": "Signal menu", "t": "09:29", "dur": 90, "acts": ["레퍼런스 슬라이드 — 천천히, 사진 찍을 시간."], "paras": ["Here is the label-free signal menu — feel free to photograph this one. Confidence: free, but as we are about to see, it can lie. Agreement: costs you K times inference with tiny models. Margin, evidence-flip, and — watch this last row — signal *trends* over time. Today we use confidence and agreement, but the menu is bigger. The rule is: combine, and never rely on one."], "bridge": "While Demo one finishes — a quick bet.", "tag": "Part 2 · reference", "title": "The label-free signal menu", "lines": ["Signal Computed from Extra cost Catches", "Confidence single model output free little, alone — can lie", "Agreement K expert votes K× inference (tiny models) novel inputs, evasion", "Margin / entropy output distribution free boundary proximity"]}, {"n": 20, "kr": "버퍼: 베팅", "t": "09:30", "dur": 60, "acts": ["체크포인트가 준비됐으면 10초 컷, 아니면 손들기 진행."], "paras": ["Before the result lands — place your bet. On our evasive test set, whose mean confidence is higher? A — the correct predictions. B — the wrong ones. C — about equal. Hands up for A? <em class=\"cue\">(pause)</em> For B? <em class=\"cue\">(pause)</em> For C? No labels were harmed in this poll."], "bridge": "Let’s see who wins.", "tag": "buffer · place your bet", "title": "Before the result lands…", "lines": ["On our evasive test set,", "whose mean confidence is higher?", "A. Correct predictions", "B. Wrong predictions"]}, {"n": 21, "kr": "Checkpoint ②", "t": "09:31", "dur": 180, "acts": ["채워진 표 가리키기. 훅 슬라이드와 연결이 핵심."], "paras": ["And here is the answer. Correct predictions: mean confidence zero point nine four five seven. Wrong predictions: zero point nine six three five. <em class=\"cue\">(pause)</em> Zero nine six three five — the exact number from my first slide, just reproduced in this room, verified against the pinned reference.", "If you voted B — congratulations, you are already thinking like this tutorial. Confidence is not just useless here; it points the wrong way. Now look at agreement: zero point eight eight seven on correct, zero point eight two four on wrong. It separates — in the right direction. Same models, same data. One signal lies, one tells the truth."], "bridge": "Confidence lies. The next question is what trusting the right signal actually buys us.", "tag": "Checkpoint ② · 09:28 · Demo 1", "title": "Demo 1 — confidence vs agreement", "lines": ["LIVE", "Signal correct wrong", "Confidence", "Agreement"]}, {"n": 22, "kr": "Kickoff ③", "t": "09:34", "dur": 60, "acts": [], "paras": ["Here is a very operational question: a SOC wants to auto-block, which means zero false alarms — precision one point zero. The hypothesis: a confidence threshold gets there only by throwing away almost everything. An agreement threshold keeps far more."], "bridge": "Next page — let’s start Demo two.", "tag": "Kickoff ③ · 09:33", "title": "Demo 2 — can we trust some alerts completely?", "lines": ["AGENT KICKOFF", "Hypothesis: to reach a zero-false-alarm (precision 1.0) auto-block policy,", "a confidence threshold must throw away almost everything;", "an agreement threshold keeps far more."]}, {"n": 23, "kr": "Run it — Demo 2", "t": "09:35", "dur": 60, "acts": ["이번엔 에이전트 경로 시연 권장(Shift+T → 붙여넣기 → t). 또는 버튼."], "paras": ["Three ways again. This time I will hand it to the agent, so you can see that path too. <em class=\"cue\">(붙여넣기)</em> Notice what the prompt asks for: not just &quot;run it&quot; — run it, verify against the pinned reference, and report the verdict. Never accept an agent&#x27;s &quot;done&quot; without a check. Remember that sentence; it comes back at the end."], "bridge": "While the agent works — the concept behind Demo two.", "tag": "Run it · Demo 2", "title": "Three ways to run it — precision-1.0 gate", "lines": ["Manual", "docker compose run --rm lab \\", "python experiments/demo2_selective.py copy", "One-click · presenter"]}, {"n": 24, "kr": "Concept 3: Selective prediction", "t": "09:36", "dur": 120, "acts": [], "paras": ["Selective prediction and abstention. Stop treating every prediction equally — let the model decline to answer. You trade coverage for risk: answer less, be right more. The interesting question is *which score* decides acceptance.", "And to be clear: an abstained prediction is not a failure. It is a correctly routed decision — to a human, to a sandbox, to more data collection."], "bridge": "And in a SOC, that strictness has a very concrete reason.", "tag": "Part 2 · Concept 3/4", "title": "Selective prediction & abstention", "lines": ["Stop treating every prediction equally — let the model decline", "Coverage ↔ risk trade-off: answer less, be right more", "The interesting question: which score decides acceptance?", "An abstained prediction is not a failure."]}, {"n": 25, "kr": "버퍼: Precision 1.0", "t": "09:38", "dur": 90, "acts": [], "paras": ["Why do we obsess over precision one point zero? Because auto-blocking on a false alarm is a self-inflicted outage. You block your own CEO&#x27;s video call once, and your automation program is over. So automation gets gated on the alerts you can trust *completely* — and every extra true positive inside that trusted zone is one incident handled at machine speed instead of analyst speed. The size of that zone is an operational KPI."], "bridge": "Demo two should be done by now — let’s measure the trusted zone.", "tag": "Part 2 · buffer", "title": "Why precision 1.0 matters in a SOC", "lines": ["Auto-blocking on false alarms = self-inflicted outage", "So automation is gated on the alerts you can trust completely", "Every extra TP inside the trusted zone = one incident handled at machine speed", "The size of that trusted zone is an operational KPI —"]}, {"n": 26, "kr": "Checkpoint ③", "t": "09:40", "dur": 150, "acts": ["채워진 표. 대비 강조."], "paras": ["The trusted zone, measured. To reach precision one point zero with confidence, the threshold climbs to zero nine eight eight — and coverage collapses to one point nine percent. Seventy-six attacks caught. With agreement, the threshold is zero point seven seven five — coverage thirty-two percent, one thousand two hundred eighty-seven attacks caught. <em class=\"cue\">(pause)</em> Sixteen point nine times more detections. Same models, same data, same zero-false-alarm guarantee. The only thing we changed is *which signal decides*."], "bridge": "Sixteen point nine — in a lab I built. Time for the dataset I did not build.", "tag": "Checkpoint ③ · 09:40 · Demo 2", "title": "Demo 2 — the trusted zone, measured", "lines": ["LIVE", "Method coverage TP", "Confidence ≥ —", "Agreement ≥ —"]}, {"n": 27, "kr": "Lab 2 소개", "t": "09:42", "dur": 120, "acts": [], "paras": ["So far, a lab where I planted the failure. Now — the dataset you all know. CIC-IDS2017. Five days, two point eight million flows, seventy-seven features. Monday is benign only. Tuesday and Wednesday: brute force, DoS, Heartbleed — that is our training data, thirty thousand flows. Thursday brings web attacks and infiltration — rare ones. Friday brings botnet, port scan, and DDoS — at massive scale.", "Same baseline, same forty-expert architecture as Lab 1. And yes — CIC-IDS2017 has well-known flaws. That is exactly why it fits a tutorial about not trusting your pipeline."], "bridge": "And I do not want you to take that pipeline on faith — next page, we run it.", "tag": "Lab 2 · CIC-IDS2017", "title": "Lab 2 — the dataset you all know", "lines": ["Day Traffic Role here", "Monday benign only —", "Tue + Wed brute force, DoS, Heartbleed training (30k flows)", "Thursday web attacks, infiltration (rare) drift eval"]}, {"n": 28, "kr": "Run it — Lab 2 pipeline", "t": "09:44", "dur": 90, "acts": ["Download 버튼 클릭(캐시라 즉시 완료 — 그걸 언급). Preprocess/Train은 사전 완료 상태임을 밝히고 넘어가거나, 시간 여유 시 Preprocess 라이브."], "paras": ["From raw dataset to trained models — one command, or stage by stage. Watch: download. <em class=\"cue\">(클릭)</em> Instant — because the pinned Kaggle mirror is already cached on this machine; at home, this fetches eight hundred forty-four megabytes once. Preprocessing takes about two minutes, training about five — I ran both before the session, and the content hashes prove it is the same data. Everything stays idempotent: run it again, it skips what is done."], "bridge": "Data in, models out. Now, the real question.", "tag": "Run it · Lab 2 pipeline", "title": "Dataset → models, live — download · preprocess · train", "lines": ["Manual", "python scripts/run_pipeline.py --track cic copy", "One-click · presenter", "▶ 1 Download idle"]}, {"n": 29, "kr": "Kickoff ④", "t": "09:46", "dur": 60, "acts": [], "paras": ["Now the question this whole tutorial has been building toward. We trained on Tuesday and Wednesday. Then the week goes on. Hypothesis: on Friday&#x27;s unseen attack families, accuracy collapses — and *neither* confidence nor agreement means will flag it. Something else has to."], "bridge": "Next page — one click.", "tag": "Kickoff ④ · 09:46", "title": "Demo 3 — then the week goes on", "lines": ["AGENT KICKOFF", "Hypothesis: on Friday's unseen attack families, accuracy collapses —", "and neither confidence nor agreement means will flag it.", "Something else has to."]}, {"n": 30, "kr": "Run it — Demo 3", "t": "09:47", "dur": 60, "acts": ["버튼 클릭. 출력 잠깐 보여주기."], "paras": ["Demo 3, one click. <em class=\"cue\">(클릭)</em> It evaluates the Tuesday-Wednesday models against three slices: a same-week holdout, Thursday, and Friday — and self-verifies all nineteen numbers against the pinned reference."], "bridge": "While it runs — the last concept.", "tag": "Run it · Demo 3", "title": "Three ways to run it — the week goes on", "lines": ["Manual", "docker compose run --rm lab \\", "python experiments/demo3_cic_drift.py copy", "One-click · presenter"]}, {"n": 31, "kr": "Concept 4: Explainability", "t": "09:48", "dur": 120, "acts": [], "paras": ["Explainability. Necessary — but not sufficient. Post-hoc XAI — saliency maps, SHAP values — *describes* a decision after the fact. And an explanation can be perfectly plausible and still unverifiable. Operations need explanations you can *test*, not admire.", "Here is the difference in one line. &quot;The model looked at these bytes&quot; — that is a story. &quot;Remove this evidence, and the decision flips&quot; — that is a testable claim."], "bridge": "So what does a testable explanation look like, concretely?", "tag": "Part 2 · Concept 4/4", "title": "Explainability — necessary, not sufficient", "lines": ["Post-hoc XAI (saliency, SHAP, …) describes a decision after the fact", "An explanation can be plausible and still unverifiable", "Operations need explanations you can test , not admire", "\"The model looked at these bytes\" is a story."]}, {"n": 32, "kr": "Evidence-based verification", "t": "09:50", "dur": 120, "acts": [], "paras": ["That leads to evidence-based verification. Find the minimal evidence set — the smallest feature subset that carries the decision. Check sufficiency: the evidence alone reproduces the decision. Check necessity: removing it flips the decision. And keep evidence diverse across experts, so no single shortcut owns the verdict.", "This is the design direction of verification-aware IDS models: make the model emit its evidence — then audit the evidence, not the vibes."], "bridge": "And while Demo three finishes — where does drift come from in the real world?", "tag": "Part 2 · Concept 4/4", "title": "Evidence-based verification", "lines": ["Minimal evidence set : smallest feature subset that carries the decision", "Sufficiency — evidence alone reproduces the decision", "Necessity — removing it flips the decision", "Diverse evidence across experts ⇒ no single shortcut owns the verdict"]}, {"n": 33, "kr": "버퍼: Drift in the wild", "t": "09:52", "dur": 60, "acts": ["체크포인트 대기용. 준비됐으면 30초 컷."], "paras": ["Where does drift actually come from? Application and TLS library updates change fingerprints overnight. Infrastructure moves — NAT, CDN, proxy rollouts. Seasonal cycles. And attackers updating their tooling — the adversarial kind. CIC-IDS2017 compresses all of this into a single week. By Friday, the model faces attack families it has never seen."], "bridge": "Our Friday is exactly that, compressed into one afternoon. Let’s look.", "tag": "buffer · drift in the wild", "title": "Where drift actually comes from", "lines": ["App & TLS library updates change fingerprints overnight", "Infrastructure moves: NAT, CDN, proxy rollouts", "Seasonal and workload cycles", "Attackers updating tooling — the adversarial kind"]}, {"n": 34, "kr": "Checkpoint ④", "t": "09:53", "dur": 180, "acts": ["채워진 표. 행별로 천천히. &quot;silent&quot; 행에서 목소리 낮추기."], "paras": ["A real collapse, in real silence. Accuracy: zero ninety-six on the holdout — zero sixty-nine on Friday. A twenty-eight point collapse. Now — remember, in production this row is invisible. So look at what you *would* see. Mean confidence: zero nine one six to zero nine one three. Silent. Mean agreement: zero ninety-seven to zero ninety-seven. Silent. <em class=\"cue\">(pause)</em> One thousand two hundred fifty-eight wrong Friday verdicts carry confidence above zero point nine — and the forty experts stay near-unanimous on their mistakes. On truly novel attacks, everyone is fooled the same way.", "But two signals did move — and they need no labels. The predicted-attack rate: twenty-two percent down to eleven — cut in half, while real attacks nearly doubled. The accept rate at our precision threshold: fourteen percent down to eight. <em class=\"cue\">(pause)</em> The means are silent. The rates are screaming. Watch the rates."], "bridge": "So — what do you do with all this on Monday morning?", "tag": "Checkpoint ④ · 09:53 · Demo 3", "title": "Demo 3 — a real collapse, in real silence", "lines": ["LIVE", "Signal holdout friday", "Accuracy (needs labels!)", "Confidence mean"]}, {"n": 35, "kr": "Accept / Review / Withhold", "t": "09:56", "dur": 150, "acts": [], "paras": ["One slide. Route every AI output through a three-way gate. Agreement above a high bar — in our lab, zero point seven seven five bought precision one point zero — accept, automate. Agreement mid-range with stable evidence — review, analyst triage. Agreement low, or signals disagreeing with confidence — withhold: abstain, collect, escalate. If you take one photo today, take this one. And tune the thresholds on *your* validation traffic, not mine."], "bridge": "The same gate, viewed as a diagnostic map.", "tag": "Part 4 · Operations", "title": "Accept / Review / Withhold", "lines": ["Condition (example policy) Route", "Agreement ≥ high bar (our lab: 0.775 ⇒ precision 1.0)", "Accept — automate", "Agreement mid-range, evidence stable"]}, {"n": 36, "kr": "Signal → action map", "t": "09:58", "dur": 120, "acts": [], "paras": ["The same idea as a diagnostic map. Confidence high but agreement low — suspect a shortcut or evasion; distrust the confidence and review. Agreement high and stable — that is your trusted zone; automate. Agreement trending down across the fleet — drift onset; trigger recalibration. And the fourth row you have now seen live: confidence rising while agreement falls — the lying pattern. Freeze automation and investigate."], "bridge": "And you do not have to build that table by hand — that is homework.", "tag": "Part 4 · Operations", "title": "Signal → action map", "lines": ["Observation Interpretation Action", "Confidence high, agreement low Likely shortcut / evasion Distrust confidence; review", "Agreement high & stable Trusted zone Automate (block/close)", "Agreement trending down fleet-wide Drift onset Trigger recalibration / retraining"]}, {"n": 37, "kr": "Take-home prompt: policy tuning", "t": "10:00", "dur": 60, "acts": [], "paras": ["This is homework, not live. The prompt on this page makes an agent sweep agreement thresholds and build your own accept-review-withhold table, at three target precisions. It refuses to touch the frozen spec, and it sanity-checks itself against the pinned reference. Run it on our lab tonight; then adapt it to your traffic."], "bridge": "Here is the full checklist, then.", "tag": "Part 4 · hands-on", "title": "Tune the gate on your own numbers", "lines": ["TAKE-HOME PROMPT", "[프롬프트]", "prompts/04_policy_tuning.md · not run live — this is your homework, on your traffic."]}, {"n": 38, "kr": "Deployment checklist", "t": "10:01", "dur": 90, "acts": [], "paras": ["The checklist version. Measure calibration on held-out data — assume it is broken until proven otherwise. Design the abstention path *before* turning on automation. Emit label-free telemetry from day one. Watch trends, not single values. And pin everything — environment, data, models, expected numbers — like we did today. That last item is what made every number in this room reproducible."], "bridge": "Now let me be honest about the limits of everything you saw.", "tag": "Part 4 · Operations", "title": "Deployment checklist", "lines": ["☐ Measure calibration on held-out data — assume it is broken until shown otherwise", "☐ Design the abstention path before turning on automation", "☐ Emit label-free telemetry (agreement, evidence stability) from day one", "☐ Watch signal trends , not single values"]}, {"n": 39, "kr": "Honest limits", "t": "10:03", "dur": 120, "acts": [], "paras": ["Now, what today&#x27;s session does *not* prove. Lab 1 is synthetic by design — it demonstrates failure mechanisms, not real-world rates. Agreement is not a silver bullet — you watched Friday&#x27;s novel attacks fool all forty experts at once, on real data. Lab 2 is one dataset, one week — thresholds do not transfer; recalibrate on your traffic. Generic ensembles are not verification-aware models — evidence-level telemetry is the next step up, and it is an active research direction. And agent-driven runs add their own variance — which is why every demo today verified itself."], "bridge": "And with the limits stated — the whole story, on one screen.", "tag": "Part 4 · Honest limits", "title": "What today's lab does not prove", "lines": ["Lab 1 is synthetic by design — it demonstrates failure mechanisms, not real-world rates", "Agreement is not a silver bullet — you watched Friday's novel attacks fool", "all 40 experts at once , live, on real data", "Lab 2 is one dataset, one week — thresholds and rates do not transfer; recalibrate on your traffic"]}, {"n": 40, "kr": "Wrap-up ①: 대시보드 전환", "t": "10:05", "dur": 390, "acts": ["D 키 → 대시보드 탭. 아래 워크스루 낭독.", "This is the live dashboard — it has been collecting our results all session. The four tiles are today&#x27;s story in four numbers. Plus zero point zero one seven eight: confidence separating in the *wrong* direction. Sixteen point nine times: what a better acceptance signal buys you at zero false alarms. Zero ninety-six to zero sixty-nine: Friday&#x27;s silent collapse. And twelve fifty-eight: confidently wrong verdicts in one afternoon of drift."], "paras": ["Let me close the loop on one screen. <em class=\"cue\">(D키)</em>", "<em class=\"cue\">(카드 순서대로)</em> Demo one — the histograms show it directly: the orange wrong-answer mass sits *above* the blue correct mass on the confidence axis. Demo two — same bar chart, seventeen times taller. Demo three — left panel: three flat lines and one collapsing line; right panel: the two rate signals that actually moved.", "Every number on this page was verified against a pinned reference, plus or minus five thousandths — and this exact page is public. Scan the QR on the last slide: at home you get this same view, backed by the pinned reference numbers, and one command rebuilds all of it."], "bridge": "Back to the slides — because the best way to trust this lab is to break it.", "tag": "Wrap-up ① · 10:08", "title": "The whole story, on one screen", "lines": ["LIVE", "→ switching to http://localhost:8000/dashboard/", "Three demos, every number verified against the pinned reference,", "all reproduced in this room within the last hour."]}, {"n": 41, "kr": "탐구 프롬프트", "t": "10:11", "dur": 90, "acts": ["슬라이드로 복귀."], "paras": ["Three ways to break our lab — please do. Stress it: regenerate the test sets with harsher evasion and watch when agreement finally gives up. Sabotage the ensemble: add experts that all see the shortcut, and watch the agreement signal degrade — diversity is doing real work. Or bring your own model: score *its* confidence on our evasive subset. Ready-made agent prompts for all three are in the repo."], "bridge": "Which brings us to the three lines I want you to keep.", "tag": "Wrap-up · keep playing", "title": "Three ways to break the lab (please do)", "lines": ["TAKE-HOME PROMPTS", "Stress it — regenerate test sets with harsher evasion via datagen parameters", "Sabotage the ensemble — add experts that all see the shortcut; watch agreement degrade", "Bring your own model — score its confidence on our evasive subset"]}, {"n": 42, "kr": "Take-home", "t": "10:13", "dur": 120, "acts": ["마지막 문장은 반드시 청중 보고. QR 잠시 유지."], "paras": ["Three lines to take home. One: accuracy is not reliability — the best metric is the one you cannot see in production. Two: verify with multiple label-free signals — agreement, evidence, and above all, trends. Three: never treat predictions equally — accept, review, withhold.", "And one last thought. <em class=\"cue\">(pause)</em> The way I treated my agent today — delegate the work, then verify the output — is exactly how your SOC should treat every AI prediction. <em class=\"cue\">(pause)</em>", "Everything is here — the artifact, the prompts, the pinned numbers. Scan the QR. I would love to hear what you break. I will be right here after the session for questions — thank you very much. <em class=\"cue\">(인사)</em>", "---"], "bridge": null, "tag": "Wrap-up ②", "title": "Take-home", "lines": ["Accuracy ≠ Reliability — the best metric is the one you cannot see in production", "Verify with multiple label-free signals — agreement, evidence, trends", "Never treat predictions equally — accept / review / withhold", "The way I treated my agent today — delegate, then verify the output —"]}];
+let cur = 0, mode = "read";
+try { cur = Math.min(D.length - 1, parseInt(localStorage.getItem("ba_cur") || "0")); } catch {}
+
+const $ = id => document.getElementById(id);
+const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+function render() {
+  const d = D[cur];
+  $("pos").innerHTML = `${d.n}<span>/42</span>`;
+  $("stag").textContent = d.tag || "—";
+  $("stitle").textContent = d.title || d.kr;
+  $("skr").textContent = d.kr;
+  $("slines").innerHTML = d.lines.map(l => `<div>${l}</div>`).join("");
+  $("mt").textContent = d.t || "—";
+  $("md").textContent = fmt(d.dur);
+  $("tg").textContent = fmt(d.dur);
+  let h = d.acts.map(a => `<div class="act">🎬 ${a}</div>`).join("");
+  h += d.paras.map(p => `<p class="para">${p}</p>`).join("");
+  if (d.bridge) h += `<div class="bridge"><div class="blab">다음 장 넘기며</div>
+    <div class="btxt">“${d.bridge}”</div></div>`;
+  $("scriptscroll").innerHTML = h;
+  $("scriptscroll").scrollTop = 0;
+  $("fill").style.width = (100 * (cur + 1) / D.length) + "%";
+  document.getElementById("scriptpane").classList.toggle("blur", mode === "recall");
+  slideT0 = perf();
+  try { localStorage.setItem("ba_cur", String(cur)); } catch {}
+  updatePace();
+}
+function go(i) { cur = Math.max(0, Math.min(D.length - 1, i)); render(); }
+
+/* ---- timer & pace ---- */
+let running = false, elapsed = 0, tick = null, slideT0 = 0;
+const perf = () => Date.now() / 1000;
+let lastStart = 0;
+function updatePace() {
+  const idealPrev = D.slice(0, cur).reduce((a, d) => a + d.dur, 0);
+  const diff = Math.round(elapsed - idealPrev);
+  const p = $("pace");
+  if (!running && elapsed === 0) { p.textContent = "—"; p.className = ""; return; }
+  p.textContent = (diff >= 0 ? "+" : "−") + fmt(Math.abs(diff));
+  p.className = diff > 20 ? "behind" : (diff < -20 ? "ahead" : "");
+}
+function loop() {
+  if (running) elapsed += 0.5;
+  $("clock").textContent = fmt(elapsed);
+  $("el").textContent = fmt(Math.max(0, elapsed - D.slice(0, cur).reduce((a,d)=>a+d.dur,0) < 0 ? 0 : (perf() - slideT0)));
+  updatePace();
+}
+$("tbtn").onclick = () => {
+  running = !running;
+  $("tbtn").textContent = running ? "⏸" : "▶";
+  if (running && !tick) { slideT0 = perf(); tick = setInterval(loop, 500); }
+};
+$("tbtn").oncontextmenu = e => { e.preventDefault(); running = false; elapsed = 0;
+  $("tbtn").textContent = "▶"; $("clock").textContent = "0:00"; updatePace(); };
+
+/* ---- nav ---- */
+$("prev").onclick = () => go(cur - 1);
+$("next").onclick = () => go(cur + 1);
+$("edgeL").onclick = () => go(cur - 1);
+$("edgeR").onclick = () => go(cur + 1);
+addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === " ") go(cur + 1);
+  else if (e.key === "ArrowLeft") go(cur - 1);
+});
+let tx = null;
+addEventListener("touchstart", e => tx = e.touches[0].clientX, {passive: true});
+addEventListener("touchend", e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx; tx = null;
+  if (Math.abs(dx) > 60) go(cur + (dx < 0 ? 1 : -1));
+}, {passive: true});
+
+/* ---- recall blur toggle ---- */
+$("scriptpane").onclick = () => {
+  if (mode === "recall") $("scriptpane").classList.toggle("blur");
+};
+
+/* ---- modes ---- */
+document.querySelectorAll("#modes .mbtn").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#modes .mbtn").forEach(x => x.classList.remove("on"));
+  b.classList.add("on");
+  mode = b.dataset.m;
+  if (mode === "bridge") { openCards(); return; }
+  $("cardmode").classList.remove("on");
+  $("scriptpane").classList.toggle("blur", mode === "recall");
+});
+
+/* ---- bridge cards ---- */
+const B = D.filter(d => d.bridge).map(d => ({n: d.n, title: d.title || d.kr, txt: d.bridge}));
+let order = B.map((_, i) => i), ci = 0;
+function showCard() {
+  const c = B[order[ci]];
+  $("bcard").classList.remove("show");
+  $("bfront").innerHTML = `<small>슬라이드 ${c.n} → ${c.n + 1}</small>${c.title}`;
+  $("bback").textContent = "“" + c.txt + "”";
+}
+function openCards() { $("cardmode").classList.add("on"); ci = 0; showCard(); }
+$("bcard").onclick = () => $("bcard").classList.add("show");
+$("cnext").onclick = () => { ci = (ci + 1) % order.length; showCard(); };
+$("cprev").onclick = () => { ci = (ci - 1 + order.length) % order.length; showCard(); };
+$("cshuf").onclick = () => { order.sort(() => Math.random() - 0.5); ci = 0; showCard(); };
+$("cexit").onclick = () => {
+  $("cardmode").classList.remove("on");
+  document.querySelectorAll("#modes .mbtn").forEach(x =>
+    x.classList.toggle("on", x.dataset.m === "read"));
+  mode = "read"; render();
+};
+
+/* ---- script size & focus mode ---- */
+let fs = 19, focus = false;
+try { fs = parseInt(localStorage.getItem("ba_fs") || "19");
+      focus = localStorage.getItem("ba_focus") === "1"; } catch {}
+function applyView() {
+  document.documentElement.style.setProperty("--fs", fs + "px");
+  document.body.classList.toggle("focus", focus);
+  $("focusbtn").classList.toggle("on", focus);
+  try { localStorage.setItem("ba_fs", String(fs));
+        localStorage.setItem("ba_focus", focus ? "1" : "0"); } catch {}
+}
+$("fminus").onclick = () => { fs = Math.max(15, fs - 1); applyView(); };
+$("fplus").onclick = () => { fs = Math.min(26, fs + 1); applyView(); };
+$("focusbtn").onclick = () => { focus = !focus; applyView(); };
+const _render = render;
+render = function () { _render();
+  $("focustitle").textContent = `${D[cur].title || D[cur].kr}`; };
+applyView();
+render();
+</script>

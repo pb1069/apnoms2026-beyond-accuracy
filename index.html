@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beyond Accuracy — APNOMS 2026 Tutorial 1</title>
+<style>
+  :root { --bg:#0f1420; --card:#1a2233; --line:#232e47; --ink:#e8edf6;
+          --dim:#8fa0bb; --accent:#5b9dff; }
+  * { box-sizing:border-box; margin:0; }
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center;
+         background:radial-gradient(900px 540px at 25% 15%, #17223c 0%, var(--bg) 60%);
+         color:var(--ink); font:16px/1.6 "Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+         padding:32px; }
+  .box { max-width:760px; width:100%; }
+  .tag { font-size:12.5px; letter-spacing:3px; text-transform:uppercase; color:var(--dim);
+         border-left:3px solid var(--accent); padding-left:12px; margin-bottom:22px; }
+  h1 { font-size:44px; font-weight:650; letter-spacing:-1px; }
+  h1 span { color:var(--accent); }
+  .sub { color:var(--dim); margin:10px 0 34px; font-size:17px; }
+  .links { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+  a.card { display:block; background:var(--card); border:1px solid var(--line);
+           border-radius:14px; padding:20px 22px; color:var(--ink); text-decoration:none; }
+  a.card:hover { border-color:var(--accent); }
+  a.card b { display:block; font-size:18px; margin-bottom:4px; }
+  a.card span { color:var(--dim); font-size:13.5px; }
+  footer { color:var(--dim); font-size:13px; margin-top:30px; }
+  footer a { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="tag">APNOMS 2026 · Tutorial 1 · Sep 9, 09:00 · Civic Hall A</div>
+  <h1>Beyond <span>Accuracy</span></h1>
+  <div class="sub">Assessing the Reliability of AI Outputs in Security Operations —
+    Ui-Jun Baek (KISTI). A fully reproducible, two-lab tutorial artifact.</div>
+  <div class="links">
+    <a class="card" href="dashboard/"><b>Results dashboard</b>
+      <span>The audit view — every number verified against a pinned reference</span></a>
+    <a class="card" href="slides/"><b>The deck</b>
+      <span>The tutorial slides themselves — live-updating, ←/→ to navigate</span></a>
+    <a class="card" href="https://github.com/pb1069/apnoms2026-beyond-accuracy"><b>Repository</b>
+      <span>Code, pinned specs, trained models, agent prompts — run it all yourself</span></a>
+  </div>
+  <footer>Reproduce everything: <code>git clone</code> the repo, then follow the README —
+    Docker, plain Python, or hand the prompts to an LLM agent.</footer>
+</div>
+</body>
+</html>

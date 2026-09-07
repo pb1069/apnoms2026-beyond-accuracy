@@ -94,10 +94,13 @@
   #term video { width:100%; display:block; border-radius:10px; }
 
   @media print {
-    html, body { overflow:visible; background:#fff; }
+    @page { size: 1280px 720px; margin: 0; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body { overflow:visible; background:var(--bg); }
     #stage { position:static; display:block; }
-    .slide { display:flex !important; page-break-after:always; transform:none !important; }
-    #hud, #bar, #notes { display:none !important; }
+    .slide { display:flex !important; page-break-after:always; transform:none !important;
+             margin:0; }
+    #hud, #bar, #notes, .edge, #term { display:none !important; }
   }
 </style>
 </head>

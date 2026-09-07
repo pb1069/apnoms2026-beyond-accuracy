@@ -357,6 +357,36 @@ docker compose run --rm lab python scripts/smoke_test.py<button class="copy">cop
   <div class="note">그림 하나로 ECE 직관 전달. "빨간 간극은 런타임에 안 보인다."</div>
 </section>
 
+<!-- NEW: fixing calibration -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 1/4</div>
+  <h2>Can we fix calibration? <span class="dim">— mostly, yes</span></h2>
+  <table>
+    <tr><th>Method</th><th>How</th><th>Cost</th></tr>
+    <tr><td><b>Temperature scaling</b></td><td>one scalar T on the logits, fit on validation</td><td>trivial — do this by default</td></tr>
+    <tr><td>Platt scaling</td><td>logistic fit on scores</td><td>trivial</td></tr>
+    <tr><td>Isotonic regression</td><td>monotone re-mapping</td><td>needs more validation data</td></tr>
+    <tr><td>Label smoothing / focal</td><td>train-time softening</td><td>retraining</td></tr>
+  </table>
+  <div class="verdict">A calibrated model is a <b>better-behaved</b> model.
+    It is still not a <i>verified</i> one.</div>
+  <div class="note">"온도 하나 맞추는 건 공짜다 — 안 할 이유가 없다." 단, 다음 장에서 함정.</div>
+</section>
+
+<!-- NEW: calibration under shift -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 1/4</div>
+  <h2>The catch: calibration is a <span class="bad" style="color:var(--bad)">snapshot</span></h2>
+  <ul class="big">
+    <li>You calibrate on <b>yesterday's validation set</b> — under yesterday's distribution</li>
+    <li>Under shift, calibration degrades <b>first and fastest</b> — often before accuracy</li>
+    <li>Recalibrating needs labels — which production does not give you</li>
+  </ul>
+  <div class="panel">So calibration is hygiene, not armor: do it, monitor it,
+    and never let "calibrated" be the reason an alert goes unreviewed.</div>
+  <div class="note">"어제의 분포에 맞춘 스냅샷" — demo 3 복선. 캘리브레이션만 믿으면 안 되는 이유.</div>
+</section>
+
 <!-- 11 =============================================================== -->
 <section class="slide">
   <div class="tag"><b>Part 2</b> · Concept 1/4 → <b>Kickoff ②</b></div>
@@ -416,6 +446,22 @@ signal actually separates errors? Include the verification verdict.<button class
   <div class="note">"모델 하나는 자신의 무지를 못 본다" → 다음 슬라이드에서 앙상블로 연결.</div>
 </section>
 
+<!-- NEW: estimating uncertainty in practice -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 2/4</div>
+  <h2>Estimating uncertainty, in practice</h2>
+  <table>
+    <tr><th>Approach</th><th>Idea</th><th>Operational cost</th></tr>
+    <tr><td>MC Dropout</td><td>sample the net with dropout on</td><td>N forward passes, same model</td></tr>
+    <tr><td><b>Deep ensembles</b></td><td>independently trained members</td><td>N models — strongest baseline</td></tr>
+    <tr><td>Evidential / prior nets</td><td>predict a distribution over outcomes</td><td>one pass, delicate training</td></tr>
+    <tr><td>Feature-subset experts</td><td>our lab: diversity by evidence</td><td>N tiny models, cheap inference</td></tr>
+  </table>
+  <div class="sub">The recurring finding: <b>diversity beats cleverness</b> —
+    independent views of the data expose ignorance that one view hides.</div>
+  <div class="note">"다양성이 기교를 이긴다." 우리 랩의 subset expert는 deep ensemble의 경량 변형.</div>
+</section>
+
 <!-- 13 =============================================================== -->
 <section class="slide">
   <div class="tag"><b>Part 2</b> · Concept 2/4</div>
@@ -447,6 +493,21 @@ signal actually separates errors? Include the verification verdict.<button class
   <div class="sub">Today's demos use confidence and agreement — but the menu is bigger.
     Combine; never rely on one.</div>
   <div class="note">레퍼런스 슬라이드 — 사진 찍는 청중 많을 장. 잠시 머물기.</div>
+</section>
+
+<!-- NEW: conformal prediction -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · worth knowing</div>
+  <h2>Conformal prediction <span class="dim">— guarantees, with fine print</span></h2>
+  <ul class="big">
+    <li>Wraps <b>any</b> model; outputs a <b>prediction set</b>, not a single label</li>
+    <li>Guarantee: the true label lands in the set with your chosen rate (say 95%)</li>
+    <li>Uncertain input ⇒ the set <b>grows</b> — set size is an honest uncertainty signal</li>
+  </ul>
+  <div class="verdict red">The fine print: the guarantee assumes <b>exchangeability</b> —
+    tomorrow looks like today. Precisely what drift breaks.
+    Under shift, monitor <b>set-size trends</b> instead of trusting the rate.</div>
+  <div class="note">요즘 가장 뜨거운 도구 — 그러나 drift가 전제를 깬다는 것까지 말해야 정직한 소개.</div>
 </section>
 
 <!-- 13c: bet buffer -->
@@ -706,6 +767,28 @@ label-free signals actually moved?<button class="copy">copy</button></div>
   <div class="note">VALIDS 충분성/필요성 개념을 일반화해 소개. 깊이는 여기까지 (아키텍처 상세 금지).</div>
 </section>
 
+<!-- NEW: evidence in action -->
+<section class="slide">
+  <div class="tag"><b>Part 2</b> · Concept 4/4</div>
+  <h2>Evidence, in action <span class="dim">— one flow, audited</span></h2>
+  <div class="cols">
+    <div class="panel"><b>Alert: "botnet C2"</b><br><span class="dim">
+      Model cites its minimal evidence: beacon-like inter-arrival regularity +
+      rare TLS fingerprint + fixed-size uplink bursts.</span></div>
+    <div>
+      <ul>
+        <li><b>Sufficiency test</b> — keep only those three: verdict stays "C2" ✓</li>
+        <li><b>Necessity test</b> — remove the timing channel: verdict flips to benign
+            → <span class="warn">the timing evidence is load-bearing</span></li>
+        <li>Analyst checks <i>that channel</i> against the pcap — minutes, not hours</li>
+      </ul>
+    </div>
+  </div>
+  <div class="sub">The audit interrogates the <b>evidence</b>, not the analyst's patience.
+    That is what makes an explanation operational.</div>
+  <div class="note">가상의 워크드 예제 — "설명을 심문 가능한 대상"으로 바꾸는 감각 전달.</div>
+</section>
+
 <!-- 21b: drift in the wild buffer =================================== -->
 <section class="slide">
   <div class="tag"><b>buffer</b> · drift in the wild</div>
@@ -719,6 +802,23 @@ label-free signals actually moved?<button class="copy">copy</button></div>
   <div class="sub">CIC-IDS2017 packs this into a single week —
     by Friday, the model faces attack families it has never seen.</div>
   <div class="note">[버퍼] 체크포인트 ④ 대기용. 요일 시나리오가 현실 드리프트의 축소판임을 정당화.</div>
+</section>
+
+<!-- NEW: drift detection toolbox -->
+<section class="slide">
+  <div class="tag"><b>Part 2½</b> · toolbox</div>
+  <h2>The drift-detection toolbox</h2>
+  <table>
+    <tr><th>Monitor</th><th>Watches</th><th>Labels?</th></tr>
+    <tr><td>PSI / KS tests</td><td>per-feature input distributions</td><td>no</td></tr>
+    <tr><td><b>Prediction-rate monitors</b></td><td>class mix of the model's own outputs</td><td>no</td></tr>
+    <tr><td><b>Accept-rate monitors</b></td><td>share passing your policy threshold</td><td>no</td></tr>
+    <tr><td>ADWIN / stream tests</td><td>change-points in any score stream</td><td>no</td></tr>
+    <tr><td>Delayed-label audits</td><td>sampled ground truth, days later</td><td>few, late</td></tr>
+  </table>
+  <div class="sub">Every row is cheap. The failure mode is not "no tools" —
+    it is <b>nobody wired them to an alarm</b>. Demo 3 shows exactly which rows fire.</div>
+  <div class="note">"도구가 없어서가 아니라 알람에 안 물려놔서 놓친다." 데모3의 rate 신호를 표의 2·3행과 연결.</div>
 </section>
 
 <!-- 22 =============================================================== -->
@@ -785,6 +885,37 @@ label-free signals actually moved?<button class="copy">copy</button></div>
     <tr><td>Confidence rising while agreement falls</td><td class="bad">The lying pattern (Demo 3)</td><td>Freeze automation; investigate</td></tr>
   </table>
   <div class="note">4행 모두 오늘 데모에서 실제로 본 패턴과 연결해 설명.</div>
+</section>
+
+<!-- NEW: when the AI is an LLM -->
+<section class="slide">
+  <div class="tag"><b>Part 4</b> · the new tenant</div>
+  <h2>When the AI in your SOC is an LLM</h2>
+  <ul class="big">
+    <li>Triage summaries, alert enrichment, query drafting — already in production</li>
+    <li>Same disease, new symptoms: fluent, <b>confident-sounding text</b> with no
+        probability attached at all</li>
+    <li>Verbalized confidence ("I am quite sure") is <b>less</b> calibrated than softmax ever was</li>
+  </ul>
+  <div class="verdict red">Everything today transfers: don't grade the tone —
+    demand <b>verifiable evidence</b>: the log lines, the rule ID, the query it ran.</div>
+  <div class="note">유창함 ≠ 정확함. "오늘 배운 원칙이 그대로 이식된다"가 요지.</div>
+</section>
+
+<!-- NEW: trusting agent outputs -->
+<section class="slide">
+  <div class="tag"><b>Part 4</b> · the new tenant</div>
+  <h2>Trusting <span class="dim">(the work of)</span> agents</h2>
+  <table>
+    <tr><th>Today's rule</th><th>Agent-world translation</th></tr>
+    <tr><td>Verify against a pinned reference</td><td>every agent task ships its own check — like our prompts did</td></tr>
+    <tr><td>Agreement across experts</td><td>independent agent (or tool) cross-checks on high-stakes output</td></tr>
+    <tr><td>Accept / review / withhold</td><td>autonomy tiers: suggest → gated action → auto, by verified track record</td></tr>
+    <tr><td>Watch rates, not means</td><td>monitor task-failure &amp; correction rates over time</td></tr>
+  </table>
+  <div class="sub">You have watched me run this loop all morning: delegate → verify → then trust.
+    It is a <b>workflow</b>, not a feeling.</div>
+  <div class="note">회수 문장의 정식 버전. take-home 전에 미리 한 번 심는 것.</div>
 </section>
 
 <!-- 24b: policy tuning take-home prompt ============================= -->
